@@ -1,0 +1,1 @@
+<?= $this->Form->input('banque_id',['options'=>$banques])?>

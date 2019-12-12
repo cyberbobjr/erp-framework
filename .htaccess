@@ -1,0 +1,12 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine on
+
+    RewriteRule ^\.well-known/acme-challenge - [L]
+
+    RewriteCond %{SERVER_NAME} !sci
+    RewriteCond %{HTTP:X-Forwarded-Proto} =http
+    #RewriteRule . https://%{HTTP:Host}%{REQUEST_URI} [L,R=permanent]
+
+    RewriteRule    ^$    webroot/    [L]
+    RewriteRule    (.*) webroot/$1    [L]
+</IfModule>

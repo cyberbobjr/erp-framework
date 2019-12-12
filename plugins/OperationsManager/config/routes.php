@@ -1,0 +1,13 @@
+<?php
+
+    use Cake\Routing\Route\DashedRoute;
+    use Cake\Routing\RouteBuilder;
+    use Cake\Routing\Router;
+
+    Router::plugin(
+        'OperationsManager',
+        ['path' => '/operations-manager'],
+        function (RouteBuilder $routes) {
+            $routes->fallbacks(DashedRoute::class);
+        }
+    );
