@@ -5,9 +5,9 @@
     use Cake\Routing\Router;
 
     Router::plugin(
-    'AppPluginsManager',
-    ['path' => '/app-plugins-manager'],
-    function (RouteBuilder $routes) {
-        $routes->fallbacks(DashedRoute::class);
-    }
-);
+        'AppPluginsManager',
+        ['path' => '/app-plugins-manager'],
+        static function (RouteBuilder $routes) {
+            $routes->fallbacks(DashedRoute::class);
+        }
+    );

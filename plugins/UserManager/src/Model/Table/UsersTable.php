@@ -2,31 +2,42 @@
 
     namespace UserManager\Model\Table;
 
+    use ArrayObject;
     use Cake\Datasource\ConnectionManager;
+    use Cake\Datasource\EntityInterface;
     use Cake\Event\Event;
+    use Cake\ORM\Association\BelongsToMany;
+    use Cake\ORM\Association\HasMany;
+    use Cake\ORM\Behavior\TimestampBehavior;
+    use Cake\ORM\Entity;
     use Cake\ORM\Query;
     use Cake\ORM\RulesChecker;
     use Cake\ORM\Table;
     use Cake\Validation\Validator;
+    use Geo\Model\Behavior\GeocoderBehavior;
+    use Josegonzalez\Upload\Model\Behavior\UploadBehavior;
+    use UserManager\Model\Entity\User;
+    use UserManager\Model\Table\Base64Processor;
+    use UserManager\Model\Table\Base64Writer;
 
     /**
      * Users Model
      *
-     * @property \Cake\ORM\Association\HasMany $Mesures
-     * @property \Cake\ORM\Association\HasMany $Rapports
-     * @property GroupesTable|\Cake\ORM\Association\BelongsToMany $Groupes
-     * @property Table|\Cake\ORM\Association\HasMany $GroupesUsers
-     * @method \UserManager\Model\Entity\User get($primaryKey, $options = [])
-     * @method \UserManager\Model\Entity\User newEntity($data = NULL, array $options = [])
-     * @method \UserManager\Model\Entity\User[] newEntities(array $data, array $options = [])
-     * @method \UserManager\Model\Entity\User|bool save(\Cake\Datasource\EntityInterface $entity, $options = [])
-     * @method \UserManager\Model\Entity\User saveOrFail(\Cake\Datasource\EntityInterface $entity, $options = [])
-     * @method \UserManager\Model\Entity\User patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
-     * @method \UserManager\Model\Entity\User[] patchEntities($entities, array $data, array $options = [])
-     * @method \UserManager\Model\Entity\User findOrCreate($search, callable $callback = NULL, $options = [])
-     * @mixin \Cake\ORM\Behavior\TimestampBehavior
-     * @mixin \Geo\Model\Behavior\GeocoderBehavior
-     * @mixin \Josegonzalez\Upload\Model\Behavior\UploadBehavior
+     * @property HasMany                    $Mesures
+     * @property HasMany                    $Rapports
+     * @property GroupesTable|BelongsToMany $Groupes
+     * @property Table|HasMany              $GroupesUsers
+     * @method User get($primaryKey, $options = [])
+     * @method User newEntity($data = NULL, array $options = [])
+     * @method User[] newEntities(array $data, array $options = [])
+     * @method User|bool save(EntityInterface $entity, $options = [])
+     * @method User saveOrFail(EntityInterface $entity, $options = [])
+     * @method User patchEntity(EntityInterface $entity, array $data, array $options = [])
+     * @method User[] patchEntities($entities, array $data, array $options = [])
+     * @method User findOrCreate($search, callable $callback = NULL, $options = [])
+     * @mixin TimestampBehavior
+     * @mixin GeocoderBehavior
+     * @mixin UploadBehavior
      */
     class UsersTable extends Table
     {
@@ -37,34 +48,42 @@
          * @param  array  $config  The configuration for the Table.
          * @return void
          */
-        public function initialize(array $config)
+        public function initialize(array $config): void
         {
             parent::initialize($config);
             $this->setDisplayField('fullname');
             $this->addBehavior('Timestamp');
-            $this->addBehavior('Geo.Geocoder', ['locale'  => 'FR',
-                                                'address' => ['address',
-                                                              'zipcode',
-                                                              'city']]);
-            $this->addBehavior('Josegonzalez/Upload.Upload',
-                ['profile' => ['pathProcessor'         => 'UserManager\Model\Table\Base64Processor',
-                               'writer'                => 'UserManager\Model\Table\Base64Writer',
-                               'keepFilesOnDelete'     => TRUE,
-                               'restoreValueOnFailure' => TRUE,
-                               'fields'                => ['dir' => 'image_dir']]]);
 
-            $this->belongsToMany('UserManager.Groupes', ['foreignKey'       => 'users_id',
-                                                         'targetForeignKey' => 'groupes_id',
-                                                         'joinTable'        => 'groupes_users']);
+            $this->addBehavior(
+                'Josegonzalez/Upload.Upload',
+                [
+                    'profile' => [
+                        'pathProcessor'         => Base64Processor::class,
+                        'writer'                => Base64Writer::class,
+                        'keepFilesOnDelete'     => TRUE,
+                        'restoreValueOnFailure' => TRUE,
+                        'fields'                => ['dir' => 'image_dir']
+                    ]
+                ]
+            );
+
+            $this->belongsToMany(
+                'UserManager.Groupes',
+                [
+                    'foreignKey'       => 'users_id',
+                    'targetForeignKey' => 'groupes_id',
+                    'joinTable'        => 'groupes_users'
+                ]
+            );
         }
 
         /**
          * Default validation rules.
          *
-         * @param  \Cake\Validation\Validator  $validator  Validator instance.
-         * @return \Cake\Validation\Validator
+         * @param  Validator  $validator  Validator instance.
+         * @return Validator
          */
-        public function validationDefault(Validator $validator)
+        public function validationDefault(Validator $validator): Validator
         {
             $validator->add('id', 'valid', ['rule' => 'numeric'])
                       ->isEmptyAllowed('id', TRUE);
@@ -81,12 +100,24 @@
             $validator->requirePresence('email', 'create')
                       ->isEmptyAllowed('email', FALSE);
 
-            $validator->add('username', 'custom', ['rule'     => 'isUnique',
-                                                   'provider' => 'table',
-                                                   'message'  => __('Ce compte utilisateur est déjà utilisé')]);
-            $validator->add('email', 'custom', ['rule'     => 'isUnique',
-                                                'provider' => 'table',
-                                                'message'  => __('Cet email utilisateur est déjà utilisé')]);
+            $validator->add(
+                'username',
+                'custom',
+                [
+                    'rule'     => 'isUnique',
+                    'provider' => 'table',
+                    'message'  => __('Ce compte utilisateur est déjà utilisé')
+                ]
+            );
+            $validator->add(
+                'email',
+                'custom',
+                [
+                    'rule'     => 'isUnique',
+                    'provider' => 'table',
+                    'message'  => __('Cet email utilisateur est déjà utilisé')
+                ]
+            );
 
             return $this->validationPassword($validator);
         }
@@ -96,42 +127,67 @@
          * Vérifie que le mot de passe est bien présent dans le cas d'un register manuel
          * Vérifie la taille du mot de passe
          * Vérifie que le mot de passe confirmé est identique au mot de passe saisi
+         *
          * @param  Validator  $validator
          * @return Validator
          */
         public function validationPassword(Validator $validator)
         {
-
-            return $validator->requirePresence('password', function ($context) {
-                if ($context['newRecord']) {
-                    return !(isset($context['data']['social_type']) && !empty($context['data']['social_type']));
-                }
-                return FALSE;
-            }, __('Le mot de passe est requis'))
-                             ->requirePresence('password_confirm',
+            return $validator->requirePresence(
+                'password',
+                static function ($context) {
+                    if ($context['newRecord']) {
+                        return !(isset($context['data']['social_type']) && !empty($context['data']['social_type']));
+                    }
+                    return FALSE;
+                },
+                __('Le mot de passe est requis')
+            )
+                             ->requirePresence(
+                                 'password_confirm',
                                  function ($context) {
                                      return !empty($context['data']['password']);
-                                 }, __('Vous devez saisir le mot de passe de confirmation (confirmation).'))
-                             ->add('password_confirm', 'equalToPassword', ['on'      => function ($context) {
-                                 return !empty($context['data']['password']);
-                             },
-                                                                           'rule'    => function ($value, $context) {
-                                                                               return ($value === $context['data']['password']);
-                                                                           },
-                                                                           'message' => __('Le mot de passe de confirmation doit être identique au mot de passe saisi.')])
-                             ->add('password', 'lengthBetween', ['on'      => function ($context) {
-                                 return !empty($context['data']['password']);
-                             },
-                                                                 'rule'    => ['lengthBetween',
-                                                                               8,
-                                                                               20],
-                                                                 'message' => __('La longueur du mot de passe doit être entre {0} et {1} caractères',
-                                                                     8, 20)]);
+                                 },
+                                 __('Vous devez saisir le mot de passe de confirmation (confirmation).')
+                             )
+                             ->add(
+                                 'password_confirm',
+                                 'equalToPassword',
+                                 [
+                                     'on'      => function ($context) {
+                                         return !empty($context['data']['password']);
+                                     },
+                                     'rule'    => function ($value, $context) {
+                                         return ($value === $context['data']['password']);
+                                     },
+                                     'message' => __('Le mot de passe de confirmation doit être identique au mot de passe saisi.')
+                                 ]
+                             )
+                             ->add(
+                                 'password',
+                                 'lengthBetween',
+                                 [
+                                     'on'      => function ($context) {
+                                         return !empty($context['data']['password']);
+                                     },
+                                     'rule'    => [
+                                         'lengthBetween',
+                                         8,
+                                         20
+                                     ],
+                                     'message' => __(
+                                         'La longueur du mot de passe doit être entre {0} et {1} caractères',
+                                         8,
+                                         20
+                                     )
+                                 ]
+                             );
         }
 
         /**
          * Fonction de validation d'un champ unique
          * Cette fonction a l'avantage de ne pas utiliser les query de l'ORM et donc de ne pas déclencher les events beforeXXXX
+         *
          * @param $check
          * @param $context
          * @return bool
@@ -141,13 +197,19 @@
             $connection = ConnectionManager::get('default');
             if (!empty($context['data']['id'])) {
                 $id = $context['data']['id'];
-                $results = $connection->execute('SELECT * FROM users WHERE '.$context['field'].' = :checkvalue AND archive!=TRUE AND id != :checkid',
-                    ['checkvalue' => $check,
-                     'checkid'    => $id])
+                $results = $connection->execute(
+                    'SELECT * FROM users WHERE '.$context['field'].' = :checkvalue AND archive!=TRUE AND id != :checkid',
+                    [
+                        'checkvalue' => $check,
+                        'checkid'    => $id
+                    ]
+                )
                                       ->fetchAll('assoc');
             } else {
-                $results = $connection->execute('SELECT * FROM users WHERE '.$context['field'].' = :checkvalue AND archive!=TRUE',
-                    ['checkvalue' => $check])
+                $results = $connection->execute(
+                    'SELECT * FROM users WHERE '.$context['field'].' = :checkvalue AND archive!=TRUE',
+                    ['checkvalue' => $check]
+                )
                                       ->fetchAll('assoc');
             }
             return (count($results) == 0);
@@ -155,6 +217,7 @@
 
         /**
          * Formattage des noms/prenoms avant sauvegarde
+         *
          * @param $event
          * @param $entity
          * @param $options
@@ -173,17 +236,18 @@
          * Returns a rules checker object that will be used for validating
          * application integrity.
          *
-         * @param  \Cake\ORM\RulesChecker  $rules  The rules object to be modified.
-         * @return \Cake\ORM\RulesChecker
+         * @param  RulesChecker  $rules  The rules object to be modified.
+         * @return RulesChecker
          */
-        public function buildRules(RulesChecker $rules)
+        public function buildRules(RulesChecker $rules): RulesChecker
         {
             return $rules;
         }
 
         /**
          * Place la date de dernière connexion pour un utilisateur
-         * @param  int  $user_id  Référence de l'utilisateur
+         *
+         * @param  int     $user_id  Référence de l'utilisateur
          * @param  string  $last_login  Date de dernière connexion
          * @return mixed Entité mise à jour ou FALSE en cas d'erreur
          */
@@ -199,8 +263,9 @@
 
         /**
          * Créé une clef de réinitialisation de mot de passe pour un utilisateur donné
+         *
          * @param  string  $courriel  Courriel de l'utilisateur
-         * @return bool|\Cake\Datasource\EntityInterface|mixed
+         * @return bool|EntityInterface|mixed
          */
         public function setResetKey($courriel = NULL)
         {
@@ -216,8 +281,9 @@
 
         /**
          * Fonction qui vérifie qu'une clef de reset password correspond bien à l'id spécifié en paramètre
+         *
          * @param  string  $resetkey  Clef de réinitialisation
-         * @param  int  $id  Référence du compte que nous voulons vérifier
+         * @param  int     $id  Référence du compte que nous voulons vérifier
          * @return bool TRUE si le compte correspond, FALSE sinon
          */
         public function checkResetKey($resetkey, $id)
@@ -228,8 +294,9 @@
 
         /**
          * Supprime l'uuid (ou resetkey) du compte participant
+         *
          * @param  int  $id  Référence du participant sur lequel nous voulons supprimer la clef
-         * @return bool|\Cake\Datasource\EntityInterface|mixed
+         * @return bool|EntityInterface|mixed
          */
         public function removeResetKey($id)
         {
@@ -240,9 +307,10 @@
 
         /**
          * Sauve le jeton d'accès passé en paramètre pour l'utilisateur
-         * @param  int  $user_id  Référence de l'utilisateur
+         *
+         * @param  int    $user_id  Référence de l'utilisateur
          * @param  array  $accessToken  Jeton d'accès à sauvegarder
-         * @return bool|\Cake\Datasource\EntityInterface|mixed
+         * @return bool|EntityInterface|mixed
          */
         public function setAccessToken($user_id, $accessToken)
         {
@@ -253,6 +321,7 @@
 
         /**
          * Retourne le jeton d'accès de l'utilisateur spécifié en paramètre
+         *
          * @param  int  $user_id  Référence de l'utilisateur
          * @return mixed Jeton d'accès
          */
@@ -264,9 +333,10 @@
 
         /**
          * Change le statut active d'un utilisateur
+         *
          * @param $user_id
          * @param $active
-         * @return bool|\Cake\Datasource\EntityInterface|mixed
+         * @return bool|EntityInterface|mixed
          */
         public function setActive($user_id, $active)
         {
@@ -277,30 +347,39 @@
 
         /**
          * @param $data
-         * @return bool|\Cake\Datasource\EntityInterface|\Cake\ORM\Entity|mixed
+         * @return bool|EntityInterface|Entity|mixed
          */
         public function register($data)
         {
-            $user = $this->newEntity($data, ['associated' => ['Groupes',
-                                                              'Groupes.Rights']]);
+            $user = $this->newEntity(
+                $data,
+                [
+                    'associated' => [
+                        'Groupes',
+                        'Groupes.Rights'
+                    ]
+                ]
+            );
             $this->save($user);
             return $user;
         }
 
         /**
          * Modifie la query avant le find pour s'assurer que l'utilisateur a bien les droits
-         * @param  Event  $event
-         * @param  Query  $query
-         * @param  \ArrayObject  $options
-         * @param              $primary
+         *
+         * @param  Event         $event
+         * @param  Query         $query
+         * @param  ArrayObject   $options
+         * @param                $primary
          */
-        public function beforeFind(Event $event, Query $query, \ArrayObject $options, $primary)
+        public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
         {
             $query->andWhere([$this->_alias.'.archive' => FALSE]);
         }
 
         /**
          * Fonction finder utilisée pour les mécanismes d'authentification, permet de bypasser le mécanisme multiclient
+         *
          * @param  Query  $query
          * @param  array  $options
          * @return Query
@@ -314,7 +393,8 @@
 
         /**
          * Place l'IP de connexion dans le modèle utilisateur
-         * @param  int  $user_id  Référence de l'utilisateur
+         *
+         * @param  int     $user_id  Référence de l'utilisateur
          * @param  string  $ip  Adresse IP de l'utilisateur
          * @return mixed Entité mise à jour ou FALSE en cas d'erreur
          */
@@ -330,9 +410,10 @@
 
         /**
          * Archive un utilisateur
-         * @param      $user_id
+         *
+         * @param        $user_id
          * @param  bool  $archive
-         * @return bool|\Cake\Datasource\EntityInterface|mixed
+         * @return bool|EntityInterface|mixed
          */
         public function setArchive($user_id, $archive = TRUE)
         {
@@ -344,8 +425,13 @@
         public function changePassword(int $userId, string $password, string $password_confirm)
         {
             $user = $this->get($userId);
-            $user = $this->patchEntity($user, ['password'         => $password,
-                                               'password_confirm' => $password_confirm]);
+            $user = $this->patchEntity(
+                $user,
+                [
+                    'password'         => $password,
+                    'password_confirm' => $password_confirm
+                ]
+            );
             return $this->save($user);
         }
 

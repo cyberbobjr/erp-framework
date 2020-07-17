@@ -7,13 +7,13 @@
     /**
      * Document Entity
      *
-     * @property int $id
-     * @property int $operation_id
-     * @property string $file
-     * @property int $type
-     * @property string $libelle
-     * @property \Cake\I18n\FrozenTime $created
-     * @property \Cake\I18n\FrozenTime $modified
+     * @property int                         $id
+     * @property int                         $operation_id
+     * @property string                      $file
+     * @property int                         $type
+     * @property string                      $libelle
+     * @property \Cake\I18n\FrozenTime       $created
+     * @property \Cake\I18n\FrozenTime       $modified
      *
      * @property \App\Model\Entity\Operation $operation
      */

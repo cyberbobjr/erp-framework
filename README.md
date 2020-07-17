@@ -1,6 +1,6 @@
 # ERP Framework
 
-Un framework ERP conçu avec [CakePHP 3.7](http://cakephp.org)
+Un framework ERP conçu avec [CakePHP 4.0](http://cakephp.org)
 
 Version interne.
 
@@ -18,13 +18,33 @@ http://localhost/install (si localhost)
 
 Suivez les instructions de l'installation pour configurer votre application.
 
-## Fonctionnalités
-AGILE ERP est conçu comme un système entièrement modulable et paramétrable. Les modules sont structurés sous la forme de "plugins" CakePHP.
+## Fonctionnalité
+ERP FRAMEWORK est conçu comme un système entièrement modulable et paramétrable. Les modules sont structurés sous la forme de "plugins".
 
-Les fonctionnalités disponibles pour développer des plugins sont :
-* Gestion des hooks pour permettre d'ajouter des éléments à une vue existante
-* Ajout de champs personnalisés supplémentaires sur des entités (objets) métiers
-* Menus personnalisés par plugin
+### Fonctionnalités du noyau (CORE)
+Les plugins de base intégrés dans le noyau sont :
+
+* Gestion des utilisateurs
+* Gestion des banques / comptes bancaires
+* Gestion des entreprises
+* Gestion des articles (produits ou services)
+* Gestion des documents (GED)
+* Gestion de la facturation
+* Gestion des réglements
+* Gestion des tiers (clients / fournisseurs)
+
+### Fonctionnalités "outils"
+Aux noyaux de base, 2 outils sont disponibles sous forme de plugins :
+
+* Gestion des plugins
+* Gestion de l'installation / mise à jour de ERP Framework
+
+## Spécificités techniques
+### Généralités
+Un plugin peut :
+* Gérer des hooks (crochets) pour permettre d'ajouter des éléments à une vue existante
+* Ajouter des champs personnalisés supplémentaires sur des entités (objets) métiers
+* Avoir ses propres menus ou s'insérer dans un menu existant
 
 ### Configuration plugin
 Le fichier "plugin.php" est l'élément central de la configuration d'un plugin. Il se trouve dans le répertoire "src" du plugin.

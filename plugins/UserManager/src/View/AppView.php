@@ -14,7 +14,7 @@
 
     namespace App\View;
 
-    use LilHermit\Bootstrap4\View\BootstrapViewTrait;
+    use BootstrapUI\View\UIViewTrait;
 
     /**
      * Application View
@@ -25,7 +25,8 @@
      */
     class AppView
     {
-        use BootstrapViewTrait;
+        use UIViewTrait;
+
         //public $layout = 'BootstrapUI.default';
 
         /**

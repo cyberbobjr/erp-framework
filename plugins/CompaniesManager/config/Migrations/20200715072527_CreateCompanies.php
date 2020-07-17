@@ -1,0 +1,38 @@
+<?php
+
+    declare(strict_types=1);
+
+    use Migrations\AbstractMigration;
+
+    class CreateCompanies extends AbstractMigration
+    {
+        /**
+         * Change Method.
+         *
+         * More information on this method is available here:
+         * https://book.cakephp.org/phinx/0/en/migrations.html#the-change-method
+         *
+         * @return void
+         */
+        public function change()
+        {
+            $this->table('companies')
+                 ->addColumn('name', 'string', ['default' => NULL, 'limit' => 255, 'null' => FALSE,])
+                 ->addColumn('address1', 'string', ['default' => NULL, 'limit' => 255, 'null' => TRUE,])
+                 ->addColumn('address2', 'string', ['default' => NULL, 'limit' => 255, 'null' => TRUE,])
+                 ->addColumn('zipcode', 'string', ['default' => NULL, 'limit' => 50, 'null' => TRUE,])
+                 ->addColumn('city', 'string', ['default' => NULL, 'limit' => 255, 'null' => TRUE,])
+                 ->addColumn('country', 'string', ['default' => NULL, 'limit' => 100, 'null' => TRUE,])
+                 ->addColumn('phonenumber', 'string', ['default' => NULL, 'limit' => 25, 'null' => TRUE,])
+                 ->addColumn('faxnumber', 'string', ['default' => NULL, 'limit' => 25, 'null' => TRUE,])
+                 ->addColumn('mobilenumber', 'string', ['default' => NULL, 'limit' => 25, 'null' => TRUE,])
+                 ->addColumn('vat_intra', 'string', ['default' => NULL, 'limit' => 50, 'null' => TRUE,])
+                 ->addColumn('vat1', 'boolean', ['default' => FALSE, 'limit' => NULL, 'null' => TRUE,])
+                 ->addColumn('vat2', 'boolean', ['default' => FALSE, 'limit' => NULL, 'null' => TRUE,])
+                 ->addColumn('capital', 'integer', ['default' => NULL, 'limit' => 11, 'null' => TRUE,])
+                 ->addColumn('capital_floor', 'integer', ['default' => NULL, 'limit' => 11, 'null' => TRUE,])
+                 ->addColumn('comments', 'text', ['default' => NULL, 'limit' => NULL, 'null' => TRUE,])
+                 ->addTimestamps('created', 'modified')
+                 ->create();
+        }
+    }

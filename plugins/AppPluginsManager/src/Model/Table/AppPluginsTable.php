@@ -2,7 +2,7 @@
 
     namespace AppPluginsManager\Model\Table;
 
-    use App\Core\AppBasePlugin;
+    use App\Core\Plugin\AppBasePlugin;
     use ArrayObject;
     use Cake\Datasource\EntityInterface;
     use Cake\Event\Event;
@@ -31,7 +31,7 @@
          * @param  array  $config  The configuration for the Table.
          * @return void
          */
-        public function initialize(array $config)
+        public function initialize(array $config): void
         {
             parent::initialize($config);
 
@@ -48,7 +48,7 @@
          * @param  Validator  $validator  Validator instance.
          * @return Validator
          */
-        public function validationDefault(Validator $validator)
+        public function validationDefault(Validator $validator): Validator
         {
             $validator
                 ->integer('id')
@@ -78,7 +78,7 @@
         {
             /** @var AppBasePlugin $newPlugin */
             $newPlugin = new $className;
-            $state == TRUE ? $newPlugin->activate() : $newPlugin->deactivate();
+            $state === TRUE ? $newPlugin->activate() : $newPlugin->deactivate();
         }
 
         public function activate(int $appplugin_id)

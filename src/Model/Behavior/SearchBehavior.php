@@ -1,15 +1,14 @@
 <?php
 
     namespace App\Model\Behavior;
-
+    
     use Cake\ORM\Behavior;
     use Cake\ORM\Query;
     use Cake\ORM\TableRegistry;
-
     /**
      * Search behavior
      */
-    class SearchBehavior extends Behavior
+    class SearchBehavior extends \Cake\ORM\Behavior
     {
         /**
          * Default configuration.
@@ -17,13 +16,7 @@
          * @var array
          */
         protected $_defaultConfig = [];
-        private $_paginatorQuery = ['limit',
-                                    'page',
-                                    'offset',
-                                    'where',
-                                    '_table',
-                                    'method'];
-
+        private $_paginatorQuery = ['limit', 'page', 'offset', 'where', '_table', 'method'];
         /**
          * Recherche un produit à partir de champs passés en paramètre
          * Les champs à rechercher est dans $_QUERY "fields"
@@ -33,7 +26,7 @@
          * @param array $options
          * @return Query
          */
-        public function findSearch(Query $query, array $options)
+        public function findSearch(\Cake\ORM\Query $query, array $options)
         {
             $param = $options['query'];
             $groupBy = [];
@@ -42,7 +35,7 @@
             // récupération du filtre de recherche
             if (isset($param['filter'])) {
                 // filtre vide par défaut
-                $filters = ($param['filter']);
+                $filters = $param['filter'];
                 // contruction du filtre de recherche
                 foreach ($filters as $field => $value) {
                     $andSearch[h($field)] = $value;
@@ -56,15 +49,11 @@
             $andSearch = [];
             // construction de la chaine de recherche
             foreach ($fields as $field) {
-                $search[$this->getTable()
-                             ->getAlias() . '.' . h($field) . ' LIKE'] = '%' . $term . '%';
+                $search[$this->getTable()->getAlias() . '.' . h($field) . ' LIKE'] = '%' . $term . '%';
                 $groupBy[] = $field;
             }
-            return $query->where(['OR' => $search])
-                         ->andWhere($andSearch)
-                         ->group($groupBy);
+            return $query->where(['OR' => $search])->andWhere($andSearch)->group($groupBy);
         }
-
         /**
          * Recherche un enregistrement en se basant sur le filtre passé en paramètre
          * Le format du filtre est un objet JSON indexé par tables :
@@ -77,37 +66,32 @@
          * @param array $options
          * @return Query
          */
-        public function findFilter(Query $query, array $options)
+        public function findFilter(\Cake\ORM\Query $query, array $options)
         {
             $contain = [];
-            $currentAliasName = $this->getTable()
-                                     ->getAlias();
+            $currentAliasName = $this->getTable()->getAlias();
             if (!isset($options['query']) || count($options['query']) == 0) {
                 return $query;
             }
             $filters = isset($options['query']['filter']) ? $options['query']['filter'] : [];
             if (isset($options['query']['include'])) {
                 $include = $options['query']['include'];
-                $contain = (is_array($include)) ? $include : json_decode($include);
+                $contain = is_array($include) ? $include : json_decode($include);
             }
-
             $method = isset($options['query']['method']) ? $options['query']['method'] : 'andWhere';
-
             if (!is_array($contain)) {
                 $contain = [$contain];
             }
             // nettoyage des valeurs vides
             $tables = $this->_cleanQuery($filters);
-
             foreach ($tables as $table => $fields) {
                 // parcours des tables à filtrer
                 if ($currentAliasName !== $table) {
                     // si ce n'est pas la table courante, nous nous assurons que la table demandée est bien liée
-                    $associations = $this->getTable()
-                                         ->associations();
+                    $associations = $this->getTable()->associations();
                     if ($associations->has($table)) {
                         // l'association existe, nous rajoutons un filtre matching sur cette association
-                        $query = $query->matching($table, function (Query $q) use ($table, $fields, $method) {
+                        $query = $query->matching($table, function (\Cake\ORM\Query $q) use ($table, $fields, $method) {
                             $q = $this->_buildQuery($q, $table, $fields, $method);
                             return $q;
                         });
@@ -123,15 +107,13 @@
             }
             $query = $this->_getAssociated($query, $contain);
             return $query;
-
         }
-
         /**
          * Nettoie la query en supprimant les clefs avec des valeurs vides
          * @param array $queries
          * @return array
          */
-        private function _cleanQuery(Array $queries)
+        private function _cleanQuery(array $queries)
         {
             $queryClean = [];
             foreach ($queries as $table => $fields) {
@@ -139,7 +121,7 @@
                     continue;
                 }
                 if (!is_array($fields)) {
-                    $queryClean[($this->getTable())->getAlias()][$table] = $fields;
+                    $queryClean[$this->getTable()->getAlias()][$table] = $fields;
                 } else {
                     foreach ($fields as $field => $value) {
                         if (!empty($value)) {
@@ -150,24 +132,21 @@
             }
             return $queryClean;
         }
-
-        private function _buildQuery(Query $query, $tableName, $fields, $where)
+        private function _buildQuery(\Cake\ORM\Query $query, $tableName, $fields, $where)
         {
-            $tableSchema = TableRegistry::get($tableName);
+            $tableSchema = \Cake\ORM\TableRegistry::get($tableName);
             $schema = $tableSchema->getSchema();
             foreach ($fields as $field => $values) {
                 if (is_array($values)) {
                     foreach ($values as $value) {
-                        $query->orWhere($this->_buildQueryColumn($schema->baseColumnType($field), $tableName, $field,
-                            $value));
+                        $query->orWhere($this->_buildQueryColumn($schema->baseColumnType($field), $tableName, $field, $value));
                     }
                 } else {
-                    $query->$where($this->_buildQueryColumn($schema->baseColumnType($field), $tableName, $field, $values));
+                    $query->{$where}($this->_buildQueryColumn($schema->baseColumnType($field), $tableName, $field, $values));
                 }
             }
             return $query;
         }
-
         private function _getAssociated($query, $contains)
         {
             if (count($contains) > 0) {
@@ -175,13 +154,12 @@
             }
             return $query;
         }
-
         private function _buildQueryColumn($type, $tableName, $field, $value)
         {
             switch ($type) {
                 case 'integer':
                     return [$tableName . '.' . $field => $value];
-                default :
+                default:
                     return [$tableName . '.' . $field . ' LIKE ' => '%' . $value . '%'];
             }
         }

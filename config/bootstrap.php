@@ -1,4 +1,5 @@
 <?php
+
     /**
      * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
      * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
@@ -12,7 +13,7 @@
      * @since         0.10.8
      * @license       http://www.opensource.org/licenses/mit-license.php MIT License
      */
-
+    declare(strict_types=1);
     /*
      * Configure paths required to find CakePHP + general filepath
      * constants
@@ -31,17 +32,39 @@
     require CORE_PATH.'config'.DS.'bootstrap.php';
 
     use Cake\Cache\Cache;
-    use Cake\Console\ConsoleErrorHandler;
     use Cake\Core\Configure;
     use Cake\Core\Configure\Engine\PhpConfig;
-    use Cake\Database\Type;
     use Cake\Datasource\ConnectionManager;
+    use Cake\Error\ConsoleErrorHandler;
     use Cake\Error\ErrorHandler;
     use Cake\Http\ServerRequest;
     use Cake\Log\Log;
-    use Cake\Mailer\Email;
+    use Cake\Mailer\Mailer;
     use Cake\Mailer\TransportFactory;
+    use Cake\Routing\Router;
     use Cake\Utility\Security;
+
+    /*
+ * See https://github.com/josegonzalez/php-dotenv for API details.
+ *
+ * Uncomment block of code below if you want to use `.env` file during development.
+ * You should copy `config/.env.example` to `config/.env` and set/modify the
+ * variables as required.
+ *
+ * The purpose of the .env file is to emulate the presence of the environment
+ * variables like they would be present in production.
+ *
+ * If you use .env files, be careful to not commit them to source control to avoid
+ * security risks. See https://github.com/josegonzalez/php-dotenv#general-security-information
+ * for more information for recommended practices.
+*/
+//    if (!env('APP_NAME') && file_exists(CONFIG . '.env')) {
+//     $dotenv = new \josegonzalez\Dotenv\Loader([CONFIG . '.env']);
+//     $dotenv->parse()
+//         ->putenv()
+//         ->toEnv()
+//         ->toServer();
+// }
 
     /*
      * Read configuration file and inject configuration into various
@@ -54,9 +77,6 @@
     try {
         Configure::config('default', new PhpConfig());
         Configure::load('app', 'default', FALSE);
-        if (file_exists(CONFIG.DS.'app_config.php')) {
-            Configure::load('app_config', 'default');
-        }
     } catch (\Exception $e) {
         exit($e->getMessage()."\n");
     }
@@ -66,6 +86,9 @@
      * You can use a file like app_local.php to provide local overrides to your
      * shared configuration.
      */
+    if (file_exists(CONFIG.DS.'app_config.php')) {
+        Configure::load('app_config', 'default');
+    }
 //Configure::load('app_local', 'default');
 
     /*
@@ -82,7 +105,7 @@
      * Set server timezone to UTC. You can change it to another timezone of your
      * choice but using UTC makes time calculations / conversions easier.
      */
-    date_default_timezone_set('Europe/Paris');
+    date_default_timezone_set(Configure::read('App.defaultTimezone'));
 
     /*
      * Configure the mbstring extension to use the correct encoding.
@@ -118,7 +141,12 @@
      *
      * If you define fullBaseUrl in your config file you can remove this.
      */
-    if (!Configure::read('App.fullBaseUrl')) {
+    /*
+ * Set the full base URL.
+ * This URL is used as the base of all absolute links.
+ */
+    $fullBaseUrl = Configure::read('App.fullBaseUrl');
+    if (!$fullBaseUrl) {
         $s = NULL;
         if (env('HTTPS')) {
             $s = 's';
@@ -126,15 +154,19 @@
 
         $httpHost = env('HTTP_HOST');
         if (isset($httpHost)) {
-            Configure::write('App.fullBaseUrl', 'http'.$s.'://'.$httpHost);
+            $fullBaseUrl = 'http'.$s.'://'.$httpHost;
         }
         unset($httpHost, $s);
     }
+    if ($fullBaseUrl) {
+        Router::fullBaseUrl($fullBaseUrl);
+    }
+    unset($fullBaseUrl);
 
     Cache::setConfig(Configure::consume('Cache'));
     ConnectionManager::setConfig(Configure::consume('Datasources'));
     TransportFactory::setConfig(Configure::consume('EmailTransport'));
-    Email::setConfig(Configure::consume('Email'));
+    Mailer::setConfig(Configure::consume('Email'));
     Log::setConfig(Configure::consume('Log'));
     Security::setSalt(Configure::consume('Security.salt'));
 
@@ -148,16 +180,22 @@
     /*
      * Setup detectors for mobile and tablet.
      */
-    ServerRequest::addDetector('mobile', function ($request) {
-        $detector = new \Detection\MobileDetect();
+    ServerRequest::addDetector(
+        'mobile',
+        static function ($request) {
+            $detector = new \Detection\MobileDetect();
 
-        return $detector->isMobile();
-    });
-    ServerRequest::addDetector('tablet', function ($request) {
-        $detector = new \Detection\MobileDetect();
+            return $detector->isMobile();
+        }
+    );
+    ServerRequest::addDetector(
+        'tablet',
+        static function ($request) {
+            $detector = new \Detection\MobileDetect();
 
-        return $detector->isTablet();
-    });
+            return $detector->isTablet();
+        }
+    );
 
     /*
      * Enable immutable time objects in the ORM.
@@ -167,14 +205,14 @@
      * locale specific date formats. For details see
      * @link http://book.cakephp.org/3.0/en/core-libraries/internationalization-and-localization.html#parsing-localized-datetime-data
      */
-    Type::build('time')
+    /*Type::build('time')
         ->useImmutable();
     Type::build('date')
         ->useImmutable();
     Type::build('datetime')
         ->useImmutable();
     Type::build('timestamp')
-        ->useImmutable();
+        ->useImmutable();*/
 
     /*
      * Custom Inflector rules, can be set to correctly pluralize or singularize
@@ -196,6 +234,5 @@
      *
      */
 
-//Application::addPlugin('Bootstrap');
     Configure::write('UserManager.background', 'background.jpg');
-    Configure::write('UserManager.sitename', 'AGILE ERP');
+    Configure::write('UserManager.sitename', 'ERP FRAMEWORK');

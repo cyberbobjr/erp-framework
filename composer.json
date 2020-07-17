@@ -1,78 +1,89 @@
 {
-  "name": "cakephp/app",
-  "description": "CakePHP skeleton app",
-  "homepage": "http://cakephp.org",
-  "type": "project",
-  "license": "MIT",
-  "require": {
-    "php": ">=7.1.0",
-    "cakephp/cakephp": "^3.7",
-    "cakephp/migrations": "~2.1.1",
-    "cakephp/plugin-installer": "^1.1",
-    "mobiledetect/mobiledetectlib": "2.*",
-    "wenzhixin/bootstrap-table": "^1.14.2",
-    "davidyell/proffer": "0.8.1",
-    "dereuromark/cakephp-geo": "^1.2",
-    "josegonzalez/cakephp-upload": "^3.7",
-    "mpdf/mpdf": "^6.1",
-    "kwn/number-to-words": "^1.3",
-    "cakephp/bake": "^1.9",
-    "lilhermit/cakephp-plugin-bootstrap4": "4.0.0.4003"
-  },
-  "require-dev": {
-    "cakephp/debug_kit": "^3.17",
-    "psy/psysh": "@stable",
-    "phpunit/phpunit": "^5.7|^6.0",
-    "dereuromark/cakephp-ide-helper": "^0.13.10"
-  },
-  "suggest": {
-    "phpunit/phpunit": "Allows automated tests to be run without system-wide install.",
-    "cakephp/cakephp-codesniffer": "Allows to check the code against the coding standards used in CakePHP."
-  },
-  "autoload": {
-    "psr-4": {
-      "App\\": "./src",
-      "AppPluginsManager\\": "./plugins/AppPluginsManager/src/",
-      "BanksManager\\": "./plugins/BanksManager/src/",
-      "CompaniesManager\\": "./plugins/CompaniesManager/src/",
-      "DocumentsManager\\": "./plugins/DocumentsManager/src/",
-      "ExamplePlugin\\": "./plugins/ExamplePlugin/src/",
-      "InvoicesManager\\": "./plugins/InvoicesManager/src/",
-      "LeasesManager\\": "./plugins/LeasesManager/src/",
-      "OperationsManager\\": "./plugins/OperationsManager/src/",
-      "PaymentsManager\\": "./plugins/PaymentsManager/src/",
-      "PropertiesManager\\": "./plugins/PropertiesManager/src/",
-      "TiersManager\\": "./plugins/TiersManager/src/",
-      "UserManager\\": "./plugins/UserManager/src/",
-      "Wizardinstaller\\": "./plugins/Wizardinstaller/src"
-    }
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "App\\Test\\": "./tests",
-      "Cake\\Test\\": "./vendor/cakephp/cakephp/tests",
-      "UserManager\\Test\\": "./plugins/UserManager/tests",
-      "OperationsManager\\Test\\": "./plugins/OperationsManager/tests",
-      "LeasesManager\\Test\\": "./plugins/LeasesManager/tests",
-      "TiersManager\\Test\\": "./plugins/TiersManager/tests",
-      "PropertiesManager\\Test\\": "./plugins/PropertiesManager/tests",
-      "Wizardinstaller\\Test\\": "./plugins/Wizardinstaller/tests",
-      "AppPluginsManager\\Test\\": "./plugins/AppPluginsManager/tests/",
-      "ExamplePlugin\\Test\\": "./plugins/ExamplePlugin/tests/"
-    }
-  },
-  "scripts": {
-    "post-install-cmd": "App\\Console\\Installer::postInstall",
-    "post-create-project-cmd": "App\\Console\\Installer::postInstall",
-    "post-autoload-dump": "Cake\\Composer\\Installer\\PluginInstaller::postAutoloadDump",
-    "check": [
-      "@test",
-      "@cs-check"
-    ],
-    "cs-check": "phpcs --colors -p --standard=vendor/cakephp/cakephp-codesniffer/CakePHP ./src ./tests",
-    "cs-fix": "phpcbf --colors --standard=vendor/cakephp/cakephp-codesniffer/CakePHP ./src ./tests",
-    "test": "phpunit --colors=always"
-  },
-  "minimum-stability": "beta",
-  "prefer-stable": true
+    "name": "cakephp/app",
+    "description": "CakePHP skeleton app",
+    "homepage": "http://cakephp.org",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": ">=7.2.0",
+        "mpdf/mpdf": "^6.1",
+        "kwn/number-to-words": "^1.3",
+        "cakephp/cakephp": "~4.1.0",
+        "cakephp/migrations": "^3.0",
+        "cakephp/plugin-installer": "^1.2",
+        "mobiledetect/mobiledetectlib": "^2.8",
+        "cakephp/authentication": "^2.0",
+        "cakephp/authorization": "^2.0",
+        "cakephp/chronos": "^2.0",
+        "friendsofcake/bootstrap-ui": "^3.0",
+        "josegonzalez/cakephp-upload": "^5.0.0-RC",
+        "cakedc/users": "^9.0",
+        "league/oauth2-facebook": "@stable",
+        "league/oauth2-google": "@stable",
+        "league/oauth2-linkedin": "@stable",
+        "google/recaptcha": "@stable",
+        "robthree/twofactorauth": "^1.5.2",
+        "ext-json": "*"
+    },
+    "require-dev": {
+        "cakephp/bake": "^2.0.3",
+        "cakephp/cakephp-codesniffer": "~4.2.0",
+        "cakephp/debug_kit": "^4.1",
+        "josegonzalez/dotenv": "^3.2",
+        "phpunit/phpunit": "~8.5.0",
+        "psy/psysh": "@stable",
+        "dereuromark/cakephp-ide-helper": "^1.7"
+    },
+    "suggest": {
+        "phpunit/phpunit": "Allows automated tests to be run without system-wide install.",
+        "cakephp/cakephp-codesniffer": "Allows to check the code against the coding standards used in CakePHP."
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "./src",
+            "AppPluginsManager\\": "./plugins/AppPluginsManager/src/",
+            "BanksManager\\": "./plugins/BanksManager/src/",
+            "CompaniesManager\\": "./plugins/CompaniesManager/src/",
+            "DocumentsManager\\": "./plugins/DocumentsManager/src/",
+            "ExamplePlugin\\": "./plugins/ExamplePlugin/src/",
+            "InvoicesManager\\": "./plugins/InvoicesManager/src/",
+            "LeasesManager\\": "./plugins/LeasesManager/src/",
+            "OperationsManager\\": "./plugins/OperationsManager/src/",
+            "PaymentsManager\\": "./plugins/PaymentsManager/src/",
+            "PropertiesManager\\": "./plugins/PropertiesManager/src/",
+            "TiersManager\\": "./plugins/TiersManager/src/",
+            "UserManager\\": "./plugins/UserManager/src/",
+            "Wizardinstaller\\": "./plugins/Wizardinstaller/src",
+            "ItemsManager\\": "./plugins/ItemsManager/src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "App\\Test\\": "./tests",
+            "Cake\\Test\\": "./vendor/cakephp/cakephp/tests",
+            "UserManager\\Test\\": "./plugins/UserManager/tests",
+            "OperationsManager\\Test\\": "./plugins/OperationsManager/tests",
+            "LeasesManager\\Test\\": "./plugins/LeasesManager/tests",
+            "TiersManager\\Test\\": "./plugins/TiersManager/tests",
+            "PropertiesManager\\Test\\": "./plugins/PropertiesManager/tests",
+            "Wizardinstaller\\Test\\": "./plugins/Wizardinstaller/tests",
+            "AppPluginsManager\\Test\\": "./plugins/AppPluginsManager/tests/",
+            "ExamplePlugin\\Test\\": "./plugins/ExamplePlugin/tests/",
+            "ItemsManager\\Test\\": "./plugins/ItemsManager/tests/"
+        }
+    },
+    "scripts": {
+        "post-install-cmd": "App\\Console\\Installer::postInstall",
+        "post-create-project-cmd": "App\\Console\\Installer::postInstall",
+        "post-autoload-dump": "Cake\\Composer\\Installer\\PluginInstaller::postAutoloadDump",
+        "check": [
+            "@test",
+            "@cs-check"
+        ],
+        "cs-check": "phpcs --colors -p --standard=vendor/cakephp/cakephp-codesniffer/CakePHP ./src ./tests",
+        "cs-fix": "phpcbf --colors --standard=vendor/cakephp/cakephp-codesniffer/CakePHP ./src ./tests",
+        "test": "phpunit --colors=always"
+    },
+    "minimum-stability": "beta",
+    "prefer-stable": true
 }

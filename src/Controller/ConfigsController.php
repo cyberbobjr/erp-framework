@@ -2,14 +2,13 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
-
 /**
  * Configs Controller
  *
  *
  * @method \App\Model\Entity\Config[]|\Cake\Datasource\ResultSetInterface paginate($object = null, array $settings = [])
  */
-class ConfigsController extends AppController
+class ConfigsController extends \App\Controller\AppController
 {
     /**
      * Index method
@@ -19,10 +18,8 @@ class ConfigsController extends AppController
     public function index()
     {
         $configs = $this->paginate($this->Configs);
-
         $this->set(compact('configs'));
     }
-
     /**
      * View method
      *
@@ -32,13 +29,9 @@ class ConfigsController extends AppController
      */
     public function view($id = null)
     {
-        $config = $this->Configs->get($id, [
-            'contain' => []
-        ]);
-
+        $config = $this->Configs->get($id, ['contain' => []]);
         $this->set('config', $config);
     }
-
     /**
      * Add method
      *
@@ -51,14 +44,12 @@ class ConfigsController extends AppController
             $config = $this->Configs->patchEntity($config, $this->request->getData());
             if ($this->Configs->save($config)) {
                 $this->Flash->success(__('The config has been saved.'));
-
                 return $this->redirect(['action' => 'index']);
             }
             $this->Flash->error(__('The config could not be saved. Please, try again.'));
         }
         $this->set(compact('config'));
     }
-
     /**
      * Edit method
      *
@@ -68,21 +59,17 @@ class ConfigsController extends AppController
      */
     public function edit($id = null)
     {
-        $config = $this->Configs->get($id, [
-            'contain' => []
-        ]);
+        $config = $this->Configs->get($id, ['contain' => []]);
         if ($this->request->is(['patch', 'post', 'put'])) {
             $config = $this->Configs->patchEntity($config, $this->request->getData());
             if ($this->Configs->save($config)) {
                 $this->Flash->success(__('The config has been saved.'));
-
                 return $this->redirect(['action' => 'index']);
             }
             $this->Flash->error(__('The config could not be saved. Please, try again.'));
         }
         $this->set(compact('config'));
     }
-
     /**
      * Delete method
      *
@@ -99,7 +86,6 @@ class ConfigsController extends AppController
         } else {
             $this->Flash->error(__('The config could not be deleted. Please, try again.'));
         }
-
         return $this->redirect(['action' => 'index']);
     }
 }

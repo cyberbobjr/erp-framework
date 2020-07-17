@@ -17,12 +17,12 @@
     use App\View\Helper\HooksHelper;
     use App\View\Helper\MenusHelper;
     use App\View\Helper\UtilityHelper;
+    use BootstrapUI\View\Helper\FlashHelper;
+    use BootstrapUI\View\Helper\FormHelper;
+    use BootstrapUI\View\Helper\HtmlHelper;
+    use BootstrapUI\View\Helper\PaginatorHelper;
+    use BootstrapUI\View\UIViewTrait;
     use Cake\View\View;
-    use LilHermit\Bootstrap4\View\BootstrapViewTrait;
-    use LilHermit\Bootstrap4\View\Helper\FlashHelper;
-    use LilHermit\Bootstrap4\View\Helper\FormHelper;
-    use LilHermit\Bootstrap4\View\Helper\HtmlHelper;
-    use LilHermit\Bootstrap4\View\Helper\PaginatorHelper;
 
     /**
      * Application View
@@ -30,17 +30,17 @@
      * Your application’s default view class
      *
      * @link http://book.cakephp.org/3.0/en/views.html#the-app-view
-     * @property HtmlHelper $Html
-     * @property FormHelper $Form
-     * @property FlashHelper $Flash
+     * @property HtmlHelper      $Html
+     * @property FormHelper      $Form
+     * @property FlashHelper     $Flash
      * @property PaginatorHelper $Paginator
-     * @property UtilityHelper $Utility
-     * @property HooksHelper $Hooks
-     * @property MenusHelper $Menus
+     * @property UtilityHelper   $Utility
+     * @property HooksHelper     $Hooks
+     * @property MenusHelper     $Menus
      */
     class AppView extends View
     {
-        use BootstrapViewTrait;
+        use UIViewTrait;
 
         /**
          * Initialization hook method.
@@ -51,13 +51,12 @@
          *
          * @return void
          */
-        public function initialize()
+        public function initialize(): void
         {
             parent::initialize();
             $this->loadHelper('Number');
             $this->loadHelper('Utility');
             $this->loadHelper('Menus');
             $this->loadHelper('Hooks');
-            $this->initializeBootstrap();
         }
     }

@@ -15,13 +15,20 @@
 
     namespace App;
 
+    use Authentication\AuthenticationService;
+    use Authentication\AuthenticationServiceInterface;
+    use Authentication\AuthenticationServiceProviderInterface;
+    use Authentication\Middleware\AuthenticationMiddleware;
     use Cake\Core\Configure;
     use Cake\Core\Exception\MissingPluginException;
+    use Cake\Datasource\FactoryLocator;
     use Cake\Error\Middleware\ErrorHandlerMiddleware;
     use Cake\Http\BaseApplication;
-    use Cake\ORM\TableRegistry;
+    use Cake\Http\MiddlewareQueue;
     use Cake\Routing\Middleware\AssetMiddleware;
     use Cake\Routing\Middleware\RoutingMiddleware;
+    use DebugKit\Plugin;
+    use Psr\Http\Message\ServerRequestInterface;
 
     /**
      * Application setup class.
@@ -29,12 +36,12 @@
      * This defines the bootstrapping logic and middleware layers you
      * want to use in your application.
      */
-    class Application extends BaseApplication
+    class Application extends BaseApplication implements AuthenticationServiceProviderInterface
     {
         /**
          * {@inheritDoc}
          */
-        public function bootstrap()
+        public function bootstrap(): void
         {
             // Call parent to load bootstrap from files.
             parent::bootstrap();
@@ -48,51 +55,53 @@
              * Debug Kit should not be installed on a production system
              */
             if (Configure::read('debug')) {
-                $this->addPlugin(\DebugKit\Plugin::class);
+                $this->addPlugin(Plugin::class);
                 $this->addPlugin('IdeHelper');
             }
 
             // Load more plugins here
+            $this->addPlugin(\CakeDC\Users\Plugin::class);
+            $this->addPlugin('Wizardinstaller', ['bootstrap' => TRUE, 'routes' => TRUE, 'autoload' => TRUE]);
             $this->addPlugin('AppPluginsManager');
             $this->addPlugin('Migrations');
             $this->addPlugin('UserManager');
-            $this->addPlugin('Wizardinstaller');
-            $this->addPlugin('Josegonzalez/Upload');
-            $this->addPlugin('LilHermit/Bootstrap4', ['bootstrap' => true]);
+            $this->addPlugin('ItemsManager');
 
             $this->_loadPlugins();
         }
 
         private function _loadPlugins()
         {
-            $pluginsTable = (TableRegistry::getTableLocator())->get('AppPluginsManager.AppPlugins');
+            $pluginsTable = FactoryLocator::get('Table')
+                                          ->get('AppPluginsManager.AppPlugins');
             $plugins = $pluginsTable->find('all')
                                     ->where(['activated' => TRUE]);
             foreach ($plugins as $plugin) {
-                $this->addPlugin($plugin->name, [
-                    'bootstrap' => TRUE,
-                    'routes'    => TRUE,
-                    'autoload'  => TRUE
-                ]);
+                $this->addPlugin(
+                    $plugin->name,
+                    [
+                        'bootstrap' => TRUE,
+                        'routes'    => TRUE,
+                        'autoload'  => TRUE
+                    ]
+                );
             }
         }
 
         /**
          * Setup the middleware queue your application will use.
          *
-         * @param  \Cake\Http\MiddlewareQueue  $middlewareQueue  The middleware queue to setup.
-         * @return \Cake\Http\MiddlewareQueue The updated middleware queue.
+         * @param  MiddlewareQueue  $middlewareQueue  The middleware queue to setup.
+         * @return MiddlewareQueue The updated middleware queue.
          */
-        public function middleware($middlewareQueue)
+        public function middleware($middlewareQueue): MiddlewareQueue
         {
             $middlewareQueue
                 // Catch any exceptions in the lower layers,
                 // and make an error page/response
                 ->add(new ErrorHandlerMiddleware(NULL, Configure::read('Error')))
                 // Handle plugin/theme assets like CakePHP normally does.
-                ->add(new AssetMiddleware([
-                    'cacheTime' => Configure::read('Asset.cacheTime')
-                ]))
+                ->add(new AssetMiddleware(['cacheTime' => Configure::read('Asset.cacheTime')]))
                 // Add routing middleware.
                 // Routes collection cache enabled by default, to disable route caching
                 // pass null as cacheConfig, example: `new RoutingMiddleware($this)`
@@ -111,11 +120,31 @@
                 $this->addPlugin('Bake');
             } catch (MissingPluginException $e) {
                 // Do not halt if the plugin is missing
-                debug($ex);
+                debug($e->getMessage());
             }
 
             $this->addPlugin('Migrations');
-
             // Load more plugins here
+        }
+
+        public function getAuthenticationService(ServerRequestInterface $request): AuthenticationServiceInterface
+        {
+            $service = new AuthenticationService();
+
+            // Define where users should be redirected to when they are not authenticated
+            $service->setConfig(['unauthenticatedRedirect' => '/users/login', 'queryParam' => 'redirect',]);
+
+            $fields = [
+                'username' => 'email',
+                'password' => 'password'
+            ];
+            // Load the authenticators. Session should be first.
+            $service->loadAuthenticator('Authentication.Session');
+            $service->loadAuthenticator('Authentication.Form');
+
+            // Load identifiers
+            $service->loadIdentifier('Authentication.Password', compact('fields'));
+
+            return $service;
         }
     }
