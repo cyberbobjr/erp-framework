@@ -1,0 +1,24 @@
+version: '3'
+services:
+  erp_mysql:
+    container_name: erp_mysql
+    image: mariadb:10.5.8
+    ports:
+      - "3306:3306"
+    volumes:
+      - ../data/mysql:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: erp_dev
+      MYSQL_ROOT_PASSWORD: root
+    restart: unless-stopped
+  erp_web:
+    container_name: erp_web
+    build:
+      context: .
+      dockerfile: Dockerfile-httpd
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../:/var/www/html

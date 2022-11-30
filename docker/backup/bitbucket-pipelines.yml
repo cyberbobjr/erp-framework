@@ -1,0 +1,32 @@
+options:
+  docker: true
+pipelines:
+  default:
+    - step:
+        image: cyberbobjr/apache-gse:1.0
+        name: Launch test
+        script:
+          - composer install
+          - php -v
+          - vendor/bin/phpunit -c phpunit.xml.dist
+        services:
+          - mysql
+    - step:
+        name: Build docker Image
+        script:
+          - docker login -u cyberbobjr -p $DOCKER_ACCESS_TOKEN
+          - docker build . -t cyberbobjr/gse-web:latest
+          - docker push cyberbobjr/gse-web:latest
+        services:
+          - docker
+        caches:
+          - docker
+definitions:
+  services:
+    mysql:
+      image: mysql:5.7
+      variables:
+        MYSQL_DATABASE: 'test_gse'
+        MYSQL_USER: 'metavide_gse'
+        MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
+        MYSQL_PASSWORD: $MYSQL_TEST_PASSWORD
