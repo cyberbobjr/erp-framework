@@ -28,11 +28,12 @@
          * C'est ce fichier install.lock qui est vérifié pour déterminer si l'application doit être installée ou est déjà
          * paramétrée
          * En supprimant le fichier install.lock l'utilisateur peut refaire une installation propre de GSO
+         * @throws \Exception
          */
 
         public function step($step = 1)
         {
-            if (file_exists(ROOT.DS.'install.lock')) {
+            if (file_exists(ROOT . DS . 'install.lock')) {
                 throw new \Exception(__('L\'installation a déjà été paramétrée, supprimez le fichier install.lock pour recommencer l\'installation.'));
             }
             // vérification anti petits malins
@@ -86,7 +87,7 @@
             $this->set('step', $step);
         }
 
-        private function _parseStep($step)
+        private function _parseStep($step): ?\Cake\Http\Response
         {
             switch ($step) {
                 case 1 :
@@ -135,7 +136,7 @@
 
         /**
          * Récupération les informations en session
-         * @param  string  $index  Nom de la clef à récupérer en session
+         * @param string $index Nom de la clef à récupérer en session
          */
         private function _readSession($index)
         {
@@ -172,7 +173,7 @@
             }
             if ($valid) {
                 // création du fichier install.lock
-                touch(ROOT.DS.'install.lock');
+                touch(ROOT . DS . 'install.lock');
             }
             $this->set('valid', $valid);
         }
@@ -206,7 +207,7 @@
          * Génére les tables nécessaires pour l'application
          * @return bool TRUE en cas de succès, FALSE si échec
          */
-        private function _generateTables()
+        private function _generateTables(): bool
         {
             $migrations = new Migrations();
             try {
@@ -223,7 +224,7 @@
          * Création des droits dans la table droits
          * @return array|bool|\Cake\ORM\ResultSet
          */
-        private function _createRights()
+        private function _createRights(): \Cake\ORM\ResultSet|bool|array
         {
             $migrations = new Migrations();
             try {
@@ -266,8 +267,8 @@
 
         /**
          * Sauvegarde les informations en session
-         * @param  string  $index  Nom de la clef à utiliser pour la session
-         * @param  array  $data  Tableau à sauvegarder
+         * @param string $index Nom de la clef à utiliser pour la session
+         * @param array $data Tableau à sauvegarder
          */
         private function _saveSession($index, $data)
         {
@@ -319,7 +320,7 @@
             unset($bdd['step3']);
             unset($bdd['notcreate']);
             $testbdd = $bdd;
-            $testbdd['database'] = 'test_'.$bdd['database'];
+            $testbdd['database'] = 'test_' . $bdd['database'];
             Configure::write('Datasources.test', $testbdd);
             return Configure::write('Datasources.default', $bdd);
         }
@@ -387,10 +388,10 @@
 
         /**
          * Fonction de vérification des informations de connexion à la BDD
-         * @param  string  $host  Adresse du serveur MySQL
-         * @param  string  $login  Login du serveur MySQL
-         * @param  string  $pwd  Mot du passe du serveur
-         * @param  string  $bdd  Nom de la base de donnée
+         * @param string $host Adresse du serveur MySQL
+         * @param string $login Login du serveur MySQL
+         * @param string $pwd Mot du passe du serveur
+         * @param string $bdd Nom de la base de donnée
          * @return bool TRUE si connexion réussie, FALSE sinon
          */
         private function _checkBdd($host, $login, $pwd, $bdd)
@@ -417,7 +418,7 @@
                 if (method_exists($connectionError, 'getAttributes')):
                     $attributes = $connectionError->getAttributes();
                     if (isset($errorMsg['message'])):
-                        $errorMsg .= '<br />'.$attributes['message'];
+                        $errorMsg .= '<br />' . $attributes['message'];
                         debug($errorMsg);
                     endif;
                 endif;

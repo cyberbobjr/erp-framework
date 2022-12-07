@@ -36,7 +36,7 @@
          * @param array $config The configuration for the Table.
          * @return void
          */
-        public function initialize(array $config)
+        public function initialize(array $config): void
         {
             parent::initialize($config);
 
@@ -53,7 +53,7 @@
          * @param \Cake\Validation\Validator $validator Validator instance.
          * @return \Cake\Validation\Validator
          */
-        public function validationDefault(Validator $validator)
+        public function validationDefault(Validator $validator): \Cake\Validation\Validator
         {
             $validator
                 ->integer('id')
@@ -73,7 +73,7 @@
             return $validator;
         }
 
-        public function afterSave(Event $event, EntityInterface $entity, ArrayObject $options)
+        public function afterSave(\Cake\Event\EventInterface $event, EntityInterface $entity, ArrayObject $options)
         {
             if ($entity->isDirty('activated')) {
                 $pluginName = $entity->get('name');

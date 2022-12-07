@@ -2,11 +2,11 @@
 
     namespace UserManager;
 
-    use App\Core\Plugin\AppBasePlugin;
+    use Cake\Core\BasePlugin;
 
     /**
      * Plugin for OperationsManager
      */
-    class Plugin extends AppBasePlugin
+    class Plugin extends BasePlugin
     {
     }

@@ -13,7 +13,7 @@
          * Fonction d'initialisation de la table
          * @param array $config
          */
-        public function initialize(array $config)
+        public function initialize(array $config): void
         {
 //            $this->addBehavior('Timestamp');
             $this->setDisplayField('rate');

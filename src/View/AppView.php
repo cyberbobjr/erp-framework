@@ -18,11 +18,6 @@
     use App\View\Helper\MenusHelper;
     use App\View\Helper\UtilityHelper;
     use Cake\View\View;
-    use LilHermit\Bootstrap4\View\BootstrapViewTrait;
-    use LilHermit\Bootstrap4\View\Helper\FlashHelper;
-    use LilHermit\Bootstrap4\View\Helper\FormHelper;
-    use LilHermit\Bootstrap4\View\Helper\HtmlHelper;
-    use LilHermit\Bootstrap4\View\Helper\PaginatorHelper;
 
     /**
      * Application View
@@ -40,8 +35,6 @@
      */
     class AppView extends View
     {
-        use BootstrapViewTrait;
-
         /**
          * Initialization hook method.
          *
@@ -51,13 +44,12 @@
          *
          * @return void
          */
-        public function initialize()
+        public function initialize(): void
         {
             parent::initialize();
             $this->loadHelper('Number');
             $this->loadHelper('Utility');
             $this->loadHelper('Menus');
             $this->loadHelper('Hooks');
-            $this->initializeBootstrap();
         }
     }

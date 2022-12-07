@@ -12,16 +12,23 @@
      * @since     3.3.0
      * @license   https://opensource.org/licenses/mit-license.php MIT License
      */
+    declare(strict_types=1);
 
     namespace App;
 
     use Cake\Core\Configure;
     use Cake\Core\Exception\MissingPluginException;
+    use Cake\Datasource\FactoryLocator;
     use Cake\Error\Middleware\ErrorHandlerMiddleware;
     use Cake\Http\BaseApplication;
+    use Cake\Http\MiddlewareQueue;
     use Cake\ORM\TableRegistry;
     use Cake\Routing\Middleware\AssetMiddleware;
     use Cake\Routing\Middleware\RoutingMiddleware;
+    use Psr\Container\ContainerInterface;
+    use Cake\Http\Middleware\BodyParserMiddleware;
+    use Cake\Http\Middleware\CsrfProtectionMiddleware;
+    use Cake\ORM\Locator\TableLocator;
 
     /**
      * Application setup class.
@@ -34,13 +41,18 @@
         /**
          * {@inheritDoc}
          */
-        public function bootstrap()
+        public function bootstrap(): void
         {
             // Call parent to load bootstrap from files.
             parent::bootstrap();
 
             if (PHP_SAPI === 'cli') {
                 $this->bootstrapCli();
+            } else {
+                FactoryLocator::add(
+                    'Table',
+                    (new TableLocator())->allowFallbackClass(FALSE)
+                );
             }
 
             /*
@@ -48,31 +60,34 @@
              * Debug Kit should not be installed on a production system
              */
             if (Configure::read('debug')) {
-                $this->addPlugin(\DebugKit\Plugin::class);
+                $this->addPlugin('DebugKit');
                 $this->addPlugin('IdeHelper');
             }
-
             // Load more plugins here
             $this->addPlugin('AppPluginsManager');
             $this->addPlugin('Migrations');
             $this->addPlugin('UserManager');
-            $this->addPlugin('Wizardinstaller');
-            $this->addPlugin('Josegonzalez/Upload');
-            $this->addPlugin('LilHermit/Bootstrap4', ['bootstrap' => true]);
-
-            $this->_loadPlugins();
+            $this->addPlugin('Wizardinstaller', [
+                'bootstrap'  => TRUE,
+                'routes'     => TRUE,
+                'console'    => TRUE,
+                'middleware' => TRUE
+            ]);
+            if (!empty(Configure::read('datasource'))) {
+                $this->_loadPlugins();
+            }
         }
 
         private function _loadPlugins()
         {
             $pluginsTable = (TableRegistry::getTableLocator())->get('AppPluginsManager.AppPlugins');
-            $plugins = $pluginsTable->find('all')
-                                    ->where(['activated' => TRUE]);
+            $plugins = $pluginsTable->find('all')->where(['activated' => TRUE]);
             foreach ($plugins as $plugin) {
                 $this->addPlugin($plugin->name, [
-                    'bootstrap' => TRUE,
-                    'routes'    => TRUE,
-                    'autoload'  => TRUE
+                    'bootstrap'  => TRUE,
+                    'routes'     => TRUE,
+                    'console'    => TRUE,
+                    'middleware' => TRUE
                 ]);
             }
         }
@@ -80,19 +95,19 @@
         /**
          * Setup the middleware queue your application will use.
          *
-         * @param  \Cake\Http\MiddlewareQueue  $middlewareQueue  The middleware queue to setup.
-         * @return \Cake\Http\MiddlewareQueue The updated middleware queue.
+         * @param MiddlewareQueue $middlewareQueue The middleware queue to setup.
+         * @return MiddlewareQueue The updated middleware queue.
          */
-        public function middleware($middlewareQueue)
+        public function middleware(MiddlewareQueue $middlewareQueue): MiddlewareQueue
         {
             $middlewareQueue
                 // Catch any exceptions in the lower layers,
                 // and make an error page/response
-                ->add(new ErrorHandlerMiddleware(NULL, Configure::read('Error')))
+                ->add(new ErrorHandlerMiddleware(Configure::read('Error')))
                 // Handle plugin/theme assets like CakePHP normally does.
-                ->add(new AssetMiddleware([
-                    'cacheTime' => Configure::read('Asset.cacheTime')
-                ]))
+                ->add(new AssetMiddleware(['cacheTime' => Configure::read('Asset.cacheTime')]))
+                ->add(new BodyParserMiddleware())
+                ->add(new CsrfProtectionMiddleware(['httponly' => TRUE]))
                 // Add routing middleware.
                 // Routes collection cache enabled by default, to disable route caching
                 // pass null as cacheConfig, example: `new RoutingMiddleware($this)`
@@ -103,15 +118,27 @@
         }
 
         /**
+         * Register application container services.
+         *
+         * @param ContainerInterface $container The Container to update.
+         * @return void
+         * @link https://book.cakephp.org/4/en/development/dependency-injection.html#dependency-injection
+         */
+        public function services(ContainerInterface $container): void
+        {
+        }
+
+        /**
          * @return void
          */
-        protected function bootstrapCli()
+        protected function bootstrapCli(): void
         {
             try {
-                $this->addPlugin('Bake');
+                $this->addOptionalPlugin('Cake/Repl');
+                $this->addOptionalPlugin('Bake');
             } catch (MissingPluginException $e) {
                 // Do not halt if the plugin is missing
-                debug($ex);
+                debug($e);
             }
 
             $this->addPlugin('Migrations');

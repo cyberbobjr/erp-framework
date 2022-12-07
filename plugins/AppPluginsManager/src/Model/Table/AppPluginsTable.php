@@ -1,8 +1,9 @@
 <?php
+    declare(strict_types=1);
 
     namespace AppPluginsManager\Model\Table;
 
-    use App\Core\AppBasePlugin;
+    use App\Core\Plugin\AppBasePlugin;
     use ArrayObject;
     use Cake\Datasource\EntityInterface;
     use Cake\Event\Event;
@@ -28,10 +29,10 @@
         /**
          * Initialize method
          *
-         * @param  array  $config  The configuration for the Table.
+         * @param array $config The configuration for the Table.
          * @return void
          */
-        public function initialize(array $config)
+        public function initialize(array $config): void
         {
             parent::initialize($config);
 
@@ -45,10 +46,10 @@
         /**
          * Default validation rules.
          *
-         * @param  Validator  $validator  Validator instance.
+         * @param Validator $validator Validator instance.
          * @return Validator
          */
-        public function validationDefault(Validator $validator)
+        public function validationDefault(Validator $validator): Validator
         {
             $validator
                 ->integer('id')
@@ -58,19 +59,19 @@
                 ->scalar('name')
                 ->maxLength('name', 255)
                 ->requirePresence('name', 'create')
-                ->allowEmptyString('name', FALSE);
+                ->allowEmptyString('name', __('Le nom ne peut pas être vide'));
 
             $validator
                 ->boolean('activated')
                 ->requirePresence('activated', 'create')
-                ->allowEmptyString('activated', FALSE);
+                ->allowEmptyString('activated', __('Ce champ ne peut pas être vide'));
 
             return $validator;
         }
 
         public function beforeSave(Event $event, EntityInterface $entity, ArrayObject $options)
         {
-            $className = $entity->get('name').'\Plugin';
+            $className = $entity->get('name') . '\Plugin';
             $this->setPluginState($className, $entity->get('activated'));
         }
 
@@ -78,7 +79,7 @@
         {
             /** @var AppBasePlugin $newPlugin */
             $newPlugin = new $className;
-            $state == TRUE ? $newPlugin->activate() : $newPlugin->deactivate();
+            $state === TRUE ? $newPlugin->activate() : $newPlugin->deactivate();
         }
 
         public function activate(int $appplugin_id)

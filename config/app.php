@@ -46,9 +46,11 @@
                                  'imageBaseUrl'  => 'img/',
                                  'cssBaseUrl'    => 'css/',
                                  'jsBaseUrl'     => 'js/',
-                                 'paths'         => ['plugins'   => [ROOT.DS.'plugins'.DS],
-                                                     'templates' => [APP.'Template'.DS],
-                                                     'locales'   => [APP.'Locale'.DS],],],
+                                 'paths'         => [
+                                     'plugins'   => [ROOT . DS . 'plugins' . DS],
+                                     'templates' => [ROOT . DS . 'templates' . DS],
+                                     'locales'   => [RESOURCES . 'locales' . DS]
+                                     ,],],
 
             /**
              * Security and encryption configuration
@@ -69,7 +71,6 @@
              */
             'Asset'          => [// 'timestamp' => true,
             ],
-
             /**
              * Configure the cache adapters.
              */
@@ -84,7 +85,7 @@
                                   */
                                  '_cake_core_'   => ['className' => 'File',
                                                      'prefix'    => 'myapp_cake_core_',
-                                                     'path'      => CACHE.'persistent/',
+                                                     'path'      => CACHE . 'persistent/',
                                                      'serialize' => TRUE,
                                                      'duration'  => '+1 years',
                                                      'url'       => env('CACHE_CAKECORE_URL', NULL),],
@@ -96,7 +97,7 @@
                                   */
                                  '_cake_model_'  => ['className' => 'File',
                                                      'prefix'    => 'myapp_cake_model_',
-                                                     'path'      => CACHE.'models/',
+                                                     'path'      => CACHE . 'models/',
                                                      'serialize' => TRUE,
                                                      'duration'  => '+1 years',
                                                      'url'       => env('CACHE_CAKEMODEL_URL', NULL),],
@@ -198,11 +199,21 @@
              * Drivers include Mysql Postgres Sqlite Sqlserver
              * See vendor\cakephp\cakephp\src\Database\Driver for complete list
              */
-            'Datasources' => ['default' => [],
-                              /**
-                               * The test connection is used during the test suite.
-                               */
-                              'test'    => []],
+            'Datasources' => [
+                'default' => [
+                    'className'  => 'Cake\Database\Connection',
+                    'driver'     => 'Cake\Database\Driver\Mysql',
+                    'persistent' => FALSE,
+                ],
+                /**
+                 * The test connection is used during the test suite.
+                 */
+                'test'    => [
+                    'className'  => 'Cake\Database\Connection',
+                    'driver'     => 'Cake\Database\Driver\Mysql',
+                    'persistent' => FALSE,
+                ]
+            ],
 
             /**
              * Configures logging options

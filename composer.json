@@ -1,29 +1,26 @@
 {
-  "name": "cakephp/app",
-  "description": "CakePHP skeleton app",
+  "name": "erp/framework",
+  "description": "AGILE ERP",
   "homepage": "http://cakephp.org",
   "type": "project",
   "license": "MIT",
   "require": {
-    "php": ">=7.1.0",
-    "cakephp/cakephp": "^3.7",
-    "cakephp/migrations": "~2.1.1",
+    "php": ">=8.1.0",
+    "cakephp/cakephp": "^4.4",
     "cakephp/plugin-installer": "^1.1",
     "mobiledetect/mobiledetectlib": "2.*",
     "wenzhixin/bootstrap-table": "^1.14.2",
-    "davidyell/proffer": "0.8.1",
-    "dereuromark/cakephp-geo": "^1.2",
-    "josegonzalez/cakephp-upload": "^3.7",
-    "mpdf/mpdf": "^6.1",
     "kwn/number-to-words": "^1.3",
-    "cakephp/bake": "^1.9",
-    "lilhermit/cakephp-plugin-bootstrap4": "4.0.0.4003"
+    "friendsofcake/bootstrap-ui": "^4.0",
+    "cakephp/migrations": "@stable",
+    "robmorgan/phinx": "*"
   },
   "require-dev": {
-    "cakephp/debug_kit": "^3.17",
     "psy/psysh": "@stable",
-    "phpunit/phpunit": "^5.7|^6.0",
-    "dereuromark/cakephp-ide-helper": "^0.13.10"
+    "phpunit/phpunit": "^8.0",
+    "cakephp/debug_kit": "~4.0",
+    "cakephp/bake": "^2.0",
+    "dereuromark/cakephp-ide-helper": "*"
   },
   "suggest": {
     "phpunit/phpunit": "Allows automated tests to be run without system-wide install.",
@@ -64,7 +61,6 @@
   "scripts": {
     "post-install-cmd": "App\\Console\\Installer::postInstall",
     "post-create-project-cmd": "App\\Console\\Installer::postInstall",
-    "post-autoload-dump": "Cake\\Composer\\Installer\\PluginInstaller::postAutoloadDump",
     "check": [
       "@test",
       "@cs-check"
@@ -74,5 +70,10 @@
     "test": "phpunit --colors=always"
   },
   "minimum-stability": "beta",
-  "prefer-stable": true
+  "prefer-stable": true,
+  "config": {
+    "allow-plugins": {
+      "cakephp/plugin-installer": true
+    }
+  }
 }

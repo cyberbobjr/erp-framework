@@ -3,10 +3,10 @@
     namespace App\View\Helper;
 
     use App\Core\Entity\AppEntity;
+    use BootstrapUI\View\Helper\FormHelper;
     use Cake\Utility\Hash;
     use Cake\View\Helper\HtmlHelper;
     use Cake\View\Helper\UrlHelper;
-    use LilHermit\Bootstrap4\View\Helper\FormHelper;
 
     /**
      * Utility helper
@@ -17,10 +17,10 @@
     class UtilityHelper extends FormHelper
     {
         /**
-         * @param  AppEntity  $entity
+         * @param AppEntity $entity
          * @return string
          */
-        public function entityControl(AppEntity $entity)
+        public function entityControl(AppEntity $entity): string
         {
             $output = [];
             foreach ($entity->getFieldsType() as $fieldName => $property) {
@@ -42,8 +42,8 @@
 
         public function postLinkBoostrap($title, $url = NULL, array $options = [])
         {
-            $options += ['block'   => NULL,
-                         'confirm' => NULL];
+            $options += ['block' => NULL,
+                'confirm' => NULL];
 
             $requestMethod = 'POST';
             if (!empty($options['method'])) {
@@ -56,8 +56,8 @@
 
             $formName = str_replace('.', '', uniqid('post_', TRUE));
             $formOptions = [
-                'name'   => $formName,
-                'style'  => 'display:none;',
+                'name' => $formName,
+                'style' => 'display:none;',
                 'method' => 'post',
             ];
             if (isset($options['target'])) {
@@ -75,10 +75,10 @@
             ]);
 
             $out = $this->formatTemplate('formStart', [
-                'attrs' => $templater->formatAttributes($formOptions).$action
+                'attrs' => $templater->formatAttributes($formOptions) . $action
             ]);
             $out .= $this->hidden('_method', [
-                'value'  => $requestMethod,
+                'value' => $requestMethod,
                 'secure' => static::SECURE_SKIP
             ]);
             $out .= $this->_csrfField();
@@ -87,8 +87,8 @@
             if (isset($options['data']) && is_array($options['data'])) {
                 foreach (Hash::flatten($options['data']) as $key => $value) {
                     $fields[$key] = $value;
-                    $out .= $this->hidden($key, ['value'  => $value,
-                                                 'secure' => static::SECURE_SKIP]);
+                    $out .= $this->hidden($key, ['value' => $value,
+                        'secure' => static::SECURE_SKIP]);
                 }
                 unset($options['data']);
             }
@@ -106,7 +106,7 @@
             unset($options['block']);
 
             $url = '#';
-            $onClick = 'document.'.$formName.'.submit();';
+            $onClick = 'document.' . $formName . '.submit();';
             if ($confirmMessage) {
                 $options['onclick'] = "bootbox.confirm('$confirmMessage', function(result){
                         if(result){
@@ -114,7 +114,7 @@
                         }
                     });";
             } else {
-                $options['onclick'] = $onClick.' ';
+                $options['onclick'] = $onClick . ' ';
             }
             $options['onclick'] .= 'event.returnValue = false; return false;';
             $out .= $this->Html->link($title, $url, $options);

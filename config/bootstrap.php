@@ -17,7 +17,7 @@
      * Configure paths required to find CakePHP + general filepath
      * constants
      */
-    require __DIR__.'/paths.php';
+    require __DIR__ . '/paths.php';
 
     /*
      * Bootstrap CakePHP.
@@ -28,19 +28,19 @@
      * - Registering the CakePHP autoloader.
      * - Setting the default application paths.
      */
-    require CORE_PATH.'config'.DS.'bootstrap.php';
+    require CORE_PATH . 'config' . DS . 'bootstrap.php';
 
     use Cake\Cache\Cache;
-    use Cake\Console\ConsoleErrorHandler;
     use Cake\Core\Configure;
     use Cake\Core\Configure\Engine\PhpConfig;
-    use Cake\Database\Type;
     use Cake\Datasource\ConnectionManager;
-    use Cake\Error\ErrorHandler;
+    use Cake\Error\ErrorTrap;
+    use Cake\Error\ExceptionTrap;
     use Cake\Http\ServerRequest;
     use Cake\Log\Log;
     use Cake\Mailer\Email;
     use Cake\Mailer\TransportFactory;
+    use Cake\Routing\Router;
     use Cake\Utility\Security;
 
     /*
@@ -54,11 +54,11 @@
     try {
         Configure::config('default', new PhpConfig());
         Configure::load('app', 'default', FALSE);
-        if (file_exists(CONFIG.DS.'app_config.php')) {
-            Configure::load('app_config', 'default');
+        if (file_exists(CONFIG . DS . 'app_config.php')) {
+            Configure::load('app_config', 'default', TRUE);
         }
     } catch (\Exception $e) {
-        exit($e->getMessage()."\n");
+        exit($e->getMessage() . "\n");
     }
 
     /*
@@ -99,37 +99,49 @@
      * Register application error and exception handlers.
      */
     $isCli = PHP_SAPI === 'cli';
-    if ($isCli) {
-        (new ConsoleErrorHandler(Configure::read('Error')))->register();
-    } else {
-        (new ErrorHandler(Configure::read('Error')))->register();
-    }
+
+    (new ErrorTrap(Configure::read('Error')))->register();
+    (new ExceptionTrap(Configure::read('Error')))->register();
 
     /*
      * Include the CLI bootstrap overrides.
      */
     if ($isCli) {
-        require __DIR__.'/bootstrap_cli.php';
+        require __DIR__ . '/bootstrap_cli.php';
     }
 
     /*
-     * Set the full base URL.
-     * This URL is used as the base of all absolute links.
-     *
-     * If you define fullBaseUrl in your config file you can remove this.
-     */
-    if (!Configure::read('App.fullBaseUrl')) {
-        $s = NULL;
-        if (env('HTTPS')) {
+  * Set the full base URL.
+  * This URL is used as the base of all absolute links.
+  */
+    $fullBaseUrl = Configure::read('App.fullBaseUrl');
+    if (!$fullBaseUrl) {
+        /*
+         * When using proxies or load balancers, SSL/TLS connections might
+         * get terminated before reaching the server. If you trust the proxy,
+         * you can enable `$trustProxy` to rely on the `X-Forwarded-Proto`
+         * header to determine whether to generate URLs using `https`.
+         *
+         * See also https://book.cakephp.org/4/en/controllers/request-response.html#trusting-proxy-headers
+         */
+        $trustProxy = false;
+
+        $s = null;
+        if (env('HTTPS') || ($trustProxy && env('HTTP_X_FORWARDED_PROTO') === 'https')) {
             $s = 's';
         }
 
         $httpHost = env('HTTP_HOST');
         if (isset($httpHost)) {
-            Configure::write('App.fullBaseUrl', 'http'.$s.'://'.$httpHost);
+            $fullBaseUrl = 'http' . $s . '://' . $httpHost;
         }
         unset($httpHost, $s);
     }
+    if ($fullBaseUrl) {
+        Router::fullBaseUrl($fullBaseUrl);
+    }
+    unset($fullBaseUrl);
+
 
     Cache::setConfig(Configure::consume('Cache'));
     ConnectionManager::setConfig(Configure::consume('Datasources'));
@@ -158,23 +170,6 @@
 
         return $detector->isTablet();
     });
-
-    /*
-     * Enable immutable time objects in the ORM.
-     *
-     * You can enable default locale format parsing by adding calls
-     * to `useLocaleParser()`. This enables the automatic conversion of
-     * locale specific date formats. For details see
-     * @link http://book.cakephp.org/3.0/en/core-libraries/internationalization-and-localization.html#parsing-localized-datetime-data
-     */
-    Type::build('time')
-        ->useImmutable();
-    Type::build('date')
-        ->useImmutable();
-    Type::build('datetime')
-        ->useImmutable();
-    Type::build('timestamp')
-        ->useImmutable();
 
     /*
      * Custom Inflector rules, can be set to correctly pluralize or singularize
