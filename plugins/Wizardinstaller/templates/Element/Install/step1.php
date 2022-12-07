@@ -4,8 +4,7 @@
 
     $valid = TRUE;
 ?>
-<?= $this->Form->create(NULL, ['url' => ['action' => 'step',
-                                         1]]) ?>
+<?= $this->Form->create(NULL, ['url' => ['action' => 'step', 1]]) ?>
 <?php $this->start('panel-content'); ?>
 <div class="well">
     <p>Bienvenue sur la page d'installation de SCI-Web. Vous allez être guidé pour installer SCI-Web sur votre serveur.
@@ -101,9 +100,11 @@
 <?php $this->start('footer'); ?>
 <div class="pull-right">
     <?= $this->Form->button(__('Etape suivante') . '&nbsp;<i class="fa fa-chevron-right"></i>', [
-        'name'     => 'step2',
-        'class'    => 'btn btn-sm btn-success',
-        'disabled' => !$valid]) ?>
+        'name'        => 'step2',
+        'class'       => 'btn btn-sm btn-success',
+        'escape'      => FALSE,
+        'escapeTitle' => FALSE,
+        'disabled'    => !$valid]) ?>
 </div>
 <?= $this->Form->end() ?>
 <?php $this->end(); ?>

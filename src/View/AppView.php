@@ -17,7 +17,7 @@
     use App\View\Helper\HooksHelper;
     use App\View\Helper\MenusHelper;
     use App\View\Helper\UtilityHelper;
-    use Cake\View\View;
+    use BootstrapUI\View\UIView;
 
     /**
      * Application View
@@ -33,7 +33,7 @@
      * @property HooksHelper $Hooks
      * @property MenusHelper $Menus
      */
-    class AppView extends View
+    class AppView extends UIView
     {
         /**
          * Initialization hook method.

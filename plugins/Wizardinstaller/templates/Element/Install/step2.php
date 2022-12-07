@@ -110,6 +110,8 @@
 <div class="pull-right">
     <?= $this->Form->button(__('Enregistrer et passer à l\'étape suivante') . '&nbsp;<i class="fa fa-chevron-right"></i>', ['name'        => 'step3',
                                                                                                                             'disabled',
+                                                                                                                            'escape'      => FALSE,
+                                                                                                                            'escapeTitle' => FALSE,
                                                                                                                             'class'       => 'btn btn-sm btn-success',
                                                                                                                             'data-toggle' => 'tooltip',
                                                                                                                             'title'       => __('Pour enregistrer la configuration, vous devrez tester la connexion')]) ?>

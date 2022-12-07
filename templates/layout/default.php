@@ -22,6 +22,11 @@
     <title>
         <?= $this->fetch('title') ?>
     </title>
+    <?php
+        echo $this->Html->css('BootstrapUI.bootstrap.min');
+        echo $this->Html->css(['BootstrapUI./font/bootstrap-icons', 'BootstrapUI./font/bootstrap-icon-sizes']);
+        echo $this->Html->script(['BootstrapUI.popper.min', 'BootstrapUI.bootstrap.min']);
+    ?>
     <?= $this->Html->meta('icon') ?>
 
     <?= $this->Html->css(['fullcalendar',
@@ -71,7 +76,7 @@
                              'jquery.ui.widget',
                              'jquery.iframe-transport',
                              'jquery.fileupload',
-                             'script']); //<= Pour l'upload des documents tiers                 ?>
+                             'script']); //<= Pour l'upload des documents tiers                  ?>
     <?= $this->fetch('meta') ?>
     <?= $this->fetch('css') ?>
     <?= $this->fetch('script') ?>

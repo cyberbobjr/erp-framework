@@ -67,15 +67,12 @@
             $this->addPlugin('AppPluginsManager');
             $this->addPlugin('Migrations');
             $this->addPlugin('UserManager');
-            $this->addPlugin('Wizardinstaller', [
-                'bootstrap'  => TRUE,
-                'routes'     => TRUE,
-                'console'    => TRUE,
-                'middleware' => TRUE
-            ]);
+            $this->addPlugin('Wizardinstaller');
             if (!empty(Configure::read('datasource'))) {
                 $this->_loadPlugins();
             }
+            $this->addPlugin('Test');
+            $this->addPlugin('BootstrapUI');
         }
 
         private function _loadPlugins()
