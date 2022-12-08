@@ -33,6 +33,7 @@
 
         public function step($step = 1)
         {
+            $this->viewBuilder()->setLayout('Wizardinstaller.default');
             if (file_exists(ROOT . DS . 'install.lock')) {
                 throw new \Exception(__('L\'installation a déjà été paramétrée, supprimez le fichier install.lock pour recommencer l\'installation.'));
             }

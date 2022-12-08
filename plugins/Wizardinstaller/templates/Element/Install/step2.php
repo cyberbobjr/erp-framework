@@ -24,8 +24,7 @@
                     $.ajax({
                         url: "<?= $this->Url->build(['controller' => 'Install',
                                                      'plugin'     => 'Wizardinstaller',
-                                                     'action'     => 'checkBdd',
-                                                     '_ext'       => 'json'
+                                                     'action'     => 'checkBdd'
                         ])?>",
                         type: "POST",
                         data: $("form")
@@ -65,28 +64,28 @@
 <?php $this->start('panel-content'); ?>
 <fieldset>
     <legend>Informations du site</legend>
-    <?= $this->Form->input('clef', ['label'       => __('Clef alphanumérique de cryptage (lettres et chiffres uniquement)'),
-                                    'pattern'     => '[a-zA-Z0-9]+',
-                                    'placeholder' => __('Cette clef sera utilisée pour chiffrer les mots de passe dans la base'),
-                                    'required']) ?>
+    <?= $this->Form->control('clef', ['label'       => __('Clef alphanumérique de cryptage (lettres et chiffres uniquement)'),
+                                      'pattern'     => '[a-zA-Z0-9]+',
+                                      'placeholder' => __('Cette clef sera utilisée pour chiffrer les mots de passe dans la base'),
+                                      'required']) ?>
 </fieldset>
 <fieldset>
     <legend>Informations de la base de données</legend>
-    <?= $this->Form->input('host', ['label'       => __('Adresse du serveur de la base de données'),
-                                    'placeholder' => __('Localhost par exemple'),
-                                    'required']) ?>
-    <?= $this->Form->input('database', ['label'       => __('Nom de la base de données'),
-                                        'placeholder' => __('Nom de la base de donnée existante sur le serveur MySQL'),
-                                        'required']) ?>
-    <?= $this->Form->input('username', ['label'       => __('Utilisateur de la base de données'),
-                                        'placeholder' => __('Compte utilisateur ayant les droits sur la base de données'),
-                                        'required']) ?>
-    <?= $this->Form->input('password', ['label'       => __('Mot de passe de l\'utilisateur'),
-                                        'placeholder' => __('Mot de passe'),
-                                        'required']) ?>
-    <?= $this->Form->checkbox('notcreate') ?>
-    <?= $this->Form->label('notcreate', __('Cochez cette case si vous <u class="text-danger">ne voulez pas</u> que les tables soient créées (dans le cas où vous utiliseriez une base existante)'), ['hiddenField' => FALSE,
-                                                                                                                                                                                                     'escape'      => FALSE]) ?>
+    <?= $this->Form->control('host', ['label'       => __('Adresse du serveur de la base de données'),
+                                      'placeholder' => __('Localhost par exemple'),
+                                      'required']) ?>
+    <?= $this->Form->control('database', ['label'       => __('Nom de la base de données'),
+                                          'placeholder' => __('Nom de la base de donnée existante sur le serveur MySQL'),
+                                          'required']) ?>
+    <?= $this->Form->control('username', ['label'       => __('Utilisateur de la base de données'),
+                                          'placeholder' => __('Compte utilisateur ayant les droits sur la base de données'),
+                                          'required']) ?>
+    <?= $this->Form->control('password', ['label'       => __('Mot de passe de l\'utilisateur'),
+                                          'placeholder' => __('Mot de passe'),
+                                          'required']) ?>
+    <?= $this->Form->control('notcreate', ['type'   => 'checkbox',
+                                           'escape' => FALSE,
+                                           'label'  => __('Cochez cette case si vous <u class="text-danger">ne voulez pas</u> que les tables soient créées (dans le cas où vous utiliseriez une base existante)')]) ?>
 </fieldset>
 <fieldset>
     <div class="text-center">
