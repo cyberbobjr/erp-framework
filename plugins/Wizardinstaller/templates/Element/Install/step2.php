@@ -1,19 +1,22 @@
 <?php
+    /**
+     * @var AppView $this
+     */
+
+    use App\View\AppView;
 
 ?>
 <script>
     $()
         .ready(function () {
-            $("input")
-                .on("keyup", function (ev) {
-                    $("button[name='step3']")
-                        .attr('disabled', true);
-                });
-            $("input")
-                .on("change", function (ev) {
-                    $("button[name='step3']")
-                        .attr('disabled', true);
-                });
+            $("input").on("keyup", function (ev) {
+                $("button[name='step3']")
+                    .attr('disabled', true);
+            });
+            $("input").on("change", function (ev) {
+                $("button[name='step3']")
+                    .attr('disabled', true);
+            });
 
             /**
              * Sur clic du bouton de test des paramètres de la BDD

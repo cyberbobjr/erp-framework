@@ -3,10 +3,11 @@
     namespace Wizardinstaller\Controller;
 
     use Cake\Core\Configure;
-    use Cake\Core\Exception\Exception;
-    use Cake\Datasource\ConnectionManager;
+    use Cake\Http\Response;
+    use Cake\ORM\ResultSet;
     use Cake\ORM\TableRegistry;
     use Migrations\Migrations;
+    use Wizardinstaller\libs\InstallService;
 
     /**
      * Wizard Controller
@@ -15,11 +16,13 @@
     class InstallController extends AppController
     {
 
-// étape vérification pré-requis : urlrewriting et chmod
-// étape 1 : URL du site
-// étape 2 : Configuration BDD (host, login, mot de passe) et test
-// étape 3 : Création d'un compte admin+mot de passe et création des tables users/groupes/droits
-// étape 3 : Validation et enregistrement
+        // étape vérification pré-requis : urlrewriting et chmod
+        // étape 1 : URL du site
+        // étape 2 : Configuration BDD (host, login, mot de passe) et test
+        // étape 3 : Création d'un compte admin+mot de passe et création des tables users/groupes/droits
+        // étape 3 : Validation et enregistrement
+        const ADMIN = 'admin';
+        const BDD = 'bdd';
 
         /**
          * Le fichier de configuration de la BDD doit être dans un fichier indépendant, ce qui permet de le générer lorsque
@@ -66,11 +69,11 @@
                     break;
                 case 2 :
                     // gestion des informations de la bdd
-                    $this->_readSession('bdd');
+                    $this->_readSession(self::BDD);
                     break;
                 case 3 :
                     // gestion du compte administrateur
-                    $this->_readSession('admin');
+                    $this->_readSession(self::ADMIN);
                     break;
                 case 4:
                     // vérification que les données en session soient bien présentes
@@ -88,7 +91,7 @@
             $this->set('step', $step);
         }
 
-        private function _parseStep($step): ?\Cake\Http\Response
+        private function _parseStep($step): ?Response
         {
             switch ($step) {
                 case 1 :
@@ -97,11 +100,11 @@
                 case 2 :
                     // step2 : Renseignement url et BDD
                     // enregistrement de la configuration en session et passage au step suivant
-                    $this->_saveSession('bdd', $this->request->getData());
+                    $this->_saveSession(self::BDD, $this->request->getData());
                     break;
                 case 3:
                     // step3 : Renseignements admin/pwd
-                    $this->_saveSession('admin', $this->request->getData());
+                    $this->_saveSession(self::ADMIN, $this->request->getData());
                     // vérification de la conformité du mot de passe
                     if (!$this->_isPasswordCorrect()) {
                         $this->Flash->error(__('Les mots de passe ne correspondent pas'));
@@ -139,7 +142,7 @@
          * Récupération les informations en session
          * @param string $index Nom de la clef à récupérer en session
          */
-        private function _readSession($index)
+        private function _readSession(string $index)
         {
             if (!is_null($this->request->getSession()
                                        ->read($index))
@@ -150,11 +153,11 @@
             }
         }
 
-        private function _ready()
+        private function _ready(): bool
         {
             return ($this->request->getSession()
-                                  ->check('admin') && $this->request->getSession()
-                                                                    ->check('bdd'));
+                                  ->check(self::ADMIN) && $this->request->getSession()
+                                                                        ->check(self::BDD));
         }
 
         private function _executeInstallation()
@@ -179,14 +182,14 @@
             $this->set('valid', $valid);
         }
 
-        private function _isTablesMustBeCreated()
+        private function _isTablesMustBeCreated(): bool
         {
             $bdd = json_decode($this->request->getSession()
-                                             ->read('bdd'), TRUE);
+                                             ->read(self::BDD), TRUE);
             return !$bdd['notcreate'];
         }
 
-        private function _createTables()
+        private function _createTables(): bool
         {
             // création des tables et enregistrement de l'utilisateur
             if (!$this->_generateTables()) {
@@ -223,9 +226,9 @@
 
         /**
          * Création des droits dans la table droits
-         * @return array|bool|\Cake\ORM\ResultSet
+         * @return array|bool|ResultSet
          */
-        private function _createRights(): \Cake\ORM\ResultSet|bool|array
+        private function _createRights(): ResultSet|bool|array
         {
             $migrations = new Migrations();
             try {
@@ -240,10 +243,10 @@
          * Création du compte admin
          * @return bool
          */
-        private function _createAdminAccount()
+        private function _createAdminAccount(): bool
         {
             $admin = json_decode($this->request->getSession()
-                                               ->read('admin'), TRUE);
+                                               ->read(self::ADMIN), TRUE);
             $groupestable = TableRegistry::getTableLocator()
                                          ->get('UserManager.Groupes');
             $userstable = TableRegistry::getTableLocator()
@@ -289,28 +292,24 @@
         /**
          * Enregistre la configuration
          */
-        private function _saveConfig()
+        private function _saveConfig(): bool
         {
             // paramétrage de la datasource
-
+            $this->_configureDatasource();
+            $this->_generateClef();
             // lancement des opérations de création de la configuration
-            if ($this->_configureDatasource() && $this->_generateClef()) {
-                // la configuration a bien été générée, on peut enregistrer le fichier de configuration
-                return Configure::dump('app_config', 'default', ['Security',
-                                                                 'Datasources']);
-            } else {
-                return FALSE;
-            }
+            // la configuration a bien été générée, on peut enregistrer le fichier de configuration
+            return Configure::dump('app_config', 'default', ['Security',
+                                                             'Datasources']);
         }
 
         /**
          * Génére le fichier de configuration Bdd
-         * @return bool
          */
         private function _configureDatasource()
         {
             $bdd = json_decode($this->request->getSession()
-                                             ->read('bdd'), TRUE);
+                                             ->read(self::BDD), TRUE);
             $bdd['className'] = 'Cake\Database\Connection';
             $bdd['driver'] = 'Cake\Database\Driver\Mysql';
             $bdd['persistent'] = FALSE;
@@ -323,25 +322,24 @@
             $testbdd = $bdd;
             $testbdd['database'] = 'test_' . $bdd['database'];
             Configure::write('Datasources.test', $testbdd);
-            return Configure::write('Datasources.default', $bdd);
+            Configure::write('Datasources.default', $bdd);
         }
 
         /**
          * Génére le fichier de configuration pour la clef de sécurité
-         * @return bool
          */
-        private function _generateClef()
+        private function _generateClef(): void
         {
             $bdd = json_decode($this->request->getSession()
-                                             ->read('bdd'), TRUE);
-            return Configure::write('Security.salt', $bdd['clef']);
+                                             ->read(self::BDD), TRUE);
+            Configure::write('Security.salt', $bdd['clef']);
         }
 
         /**
          * Retourne l'étape demandée
          * @return int Numéro de l'étape
          */
-        private function _getStep()
+        private function _getStep(): int
         {
             if (!is_null($this->request->getData('step1'))) {
                 return 1;
@@ -363,67 +361,18 @@
          * Les paramètres sont en $_POST
          * Cette fonction est appelée en AJAX et renvoie un résultat JSON ok/nok
          */
-        public function checkBdd()
+        public function checkBdd(InstallService $installService)
         {
             // récupération des informations $_POST
             $host = $this->request->getData('host');
-            $login = $this->request->getData('username');
+            $username = $this->request->getData('username');
             $pwd = $this->request->getData('password');
+            $port = $this->request->getData('port', 3306);
             $bdd = $this->request->getData('database');
-            // si l'un des paramètres est vide, erreur
-            if (is_null($host) || is_null($login) || is_null($pwd) || is_null($bdd)) {
-                $result = ['success' => FALSE,
-                           'msg'     => __('Les informations ne sont pas complètes')];
-            } else {
-                // paramètres non vide, nous testons la configuration
-                if ($this->_checkBdd($host, $login, $pwd, $bdd)) {
-                    $result = ['success' => TRUE,
-                               'msg'     => __('Connexion réussie')];
-                } else {
-                    $result = ['success' => FALSE,
-                               'msg'     => __('Les informations saisies ne sont pas correctes, erreur de connexion')];
-                }
-            }
+            $result = $installService->checkBdd($host, $port, $username, $pwd, $bdd);
             $this->set(compact('result'));
-        }
-
-        /**
-         * Fonction de vérification des informations de connexion à la BDD
-         * @param string $host Adresse du serveur MySQL
-         * @param string $login Login du serveur MySQL
-         * @param string $pwd Mot du passe du serveur
-         * @param string $bdd Nom de la base de donnée
-         * @return bool TRUE si connexion réussie, FALSE sinon
-         */
-        private function _checkBdd($host, $login, $pwd, $bdd)
-        {
-
-            ConnectionManager::setConfig('testgso', ['className'        => 'Cake\Database\Connection',
-                                                     'driver'           => 'Cake\Database\Driver\Mysql',
-                                                     'persistent'       => TRUE,
-                                                     'host'             => $host,
-                                                     'username'         => $login,
-                                                     'password'         => $pwd,
-                                                     'database'         => $bdd,
-                                                     'encoding'         => 'utf8',
-                                                     'timezone'         => 'UTC',
-                                                     'cacheMetadata'    => TRUE,
-                                                     'quoteIdentifiers' => FALSE,
-                                                     'log'              => TRUE,]);
-            try {
-                $connection = ConnectionManager::get('testgso');
-                $connected = $connection->connect();
-            } catch (Exception $connectionError) {
-                $connected = FALSE;
-                $errorMsg = $connectionError->getMessage();
-                if (method_exists($connectionError, 'getAttributes')):
-                    $attributes = $connectionError->getAttributes();
-                    if (isset($errorMsg['message'])):
-                        $errorMsg .= '<br />' . $attributes['message'];
-                        debug($errorMsg);
-                    endif;
-                endif;
-            }
-            return $connected;
+            $this->viewBuilder()
+                 ->setOption('serialize', ['result'])
+                 ->setOption('jsonOptions', JSON_FORCE_OBJECT);
         }
     }

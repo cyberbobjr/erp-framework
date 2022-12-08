@@ -9,6 +9,7 @@
     use Cake\Core\PluginApplicationInterface;
     use Cake\Http\MiddlewareQueue;
     use Cake\Routing\RouteBuilder;
+    use Wizardinstaller\libs\InstallService;
 
     class WizardinstallerPlugin extends AppBasePlugin
     {
@@ -98,5 +99,6 @@
         public function services(ContainerInterface $container): void
         {
             // Add your services here
+            $container->add(InstallService::class);
         }
     }
