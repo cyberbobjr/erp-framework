@@ -1,9 +1,3 @@
-<?php
-$bdd = json_decode($this->request->session()
-                                 ->read('bdd'));
-$admin = json_decode($this->request->session()
-                                   ->read('admin'));
-?>
 <?php $this->start('title') ?>
 Récapitulatif des informations de configuration
 <?php $this->end(); ?>

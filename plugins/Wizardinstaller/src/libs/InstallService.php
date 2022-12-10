@@ -2,70 +2,109 @@
 
     namespace Wizardinstaller\libs;
 
-    use Cake\Core\Exception\Exception;
-    use Cake\Datasource\ConnectionManager;
+    use Cake\ORM\ResultSet;
+    use Cake\ORM\TableRegistry;
+    use Migrations\Migrations;
+    use UserManager\Model\Table\GroupesTable;
+    use UserManager\Model\Table\UsersTable;
+    use Wizardinstaller\Exceptions\InstallException;
 
     class InstallService
     {
-        public function checkBdd($host, $port, $username, $pwd, $bdd): array
+        /**
+         * @param $admin
+         * @param $bdd
+         * @return array
+         */
+        public function execute($admin, $bdd): array
         {
-            // si l'un des paramètres est vide, erreur
-            if ($this->isValidBddInfo($host, $port, $username, $pwd, $bdd)) {
-                return ['success' => FALSE,
-                        'msg'     => __('Les informations ne sont pas complètes')];
+            if ($admin === NULL || $bdd === NULL) {
+                throw new InstallException(__("Données vides, session expirée"));
             }
-            // paramètres non vide, nous testons la configuration
-            if ($this->_checkBdd($host, $username, $pwd, $bdd)) {
-                return ['success' => TRUE,
-                        'msg'     => __('Connexion réussie')];
+            $results = [];
+            $this->_isTablesMustBeCreated($bdd) && !$this->_createTables();
+            $results[] = __('Tables et droits créés');
+
+            /**
+             * Création du compte administrateur
+             */
+            if (!$this->_createAdminAccount($admin)) {
+                throw new InstallException(__('Erreur durant la création du compte administrateur'));
             }
-
-            return ['success' => FALSE,
-                    'msg'     => __('Les informations saisies ne sont pas correctes, erreur de connexion')];;
-        }
-
-        private function isValidBddInfo($host, $port, $username, $pwd, $bdd): bool
-        {
-            return is_null($host) || is_null($username) || is_null($pwd) || is_null($bdd) || is_null($port);
+            $results[] = __('compte administrateur créé');
+            // création du fichier install.lock
+            touch(ROOT . DS . 'install.lock');
+            return $results;
         }
 
         /**
-         * Fonction de vérification des informations de connexion à la BDD
-         * @param string $host Adresse du serveur MySQL
-         * @param string $username Login du serveur MySQL
-         * @param string $pwd Mot du passe du serveur
-         * @param string $bdd Nom de la base de donnée
-         * @return bool TRUE si connexion réussie, FALSE sinon
          */
-        private function _checkBdd(string $host, string $username, string $pwd, string $bdd): bool
+        private function _isTablesMustBeCreated($bdd): bool
         {
-            ConnectionManager::setConfig('testerp', [
-                'className'        => 'Cake\Database\Connection',
-                'driver'           => 'Cake\Database\Driver\Mysql',
-                'persistent'       => TRUE,
-                'host'             => $host,
-                'username'         => $username,
-                'password'         => $pwd,
-                'database'         => $bdd,
-                'encoding'         => 'utf8',
-                'timezone'         => 'UTC',
-                'cacheMetadata'    => TRUE,
-                'quoteIdentifiers' => FALSE,
-                'log'              => TRUE,]);
-            try {
-                $connection = ConnectionManager::get('testerp');
-                $connected = $connection->connect();
-            } catch (Exception $connectionError) {
-                $connected = FALSE;
-                $errorMsg = $connectionError->getMessage();
-                if (method_exists($connectionError, 'getAttributes')):
-                    $attributes = $connectionError->getAttributes();
-                    if (isset($errorMsg['message'])):
-                        $errorMsg .= '<br />' . $attributes['message'];
-                        debug($errorMsg);
-                    endif;
-                endif;
+            return !$bdd['notcreate'];
+        }
+
+        private function _createTables(): bool
+        {
+            // création des tables et enregistrement de l'utilisateur
+            if (!$this->_generateTables()) {
+                throw new InstallException(__('Erreur durant la création des tables'));
             }
-            return $connected;
+
+            if (!$this->_createRights()) {
+                throw new InstallException(__('Erreur durant la création des droits'));
+            }
+
+            return TRUE;
+        }
+
+        /**
+         * Génére les tables nécessaires pour l'application
+         * @return bool TRUE en cas de succès, FALSE si échec
+         */
+        private function _generateTables(): bool
+        {
+            return (new Migrations())->migrate(['plugin' => 'Wizardinstaller']);
+        }
+
+        /**
+         * Création des droits dans la table droits
+         * @return array|bool|ResultSet
+         */
+        private function _createRights(): ResultSet|bool|array
+        {
+            return (new Migrations())->seed(['seed' => 'RightsSeed']);
+        }
+
+        /**
+         * Création du compte admin
+         * @param $admin
+         * @return bool
+         */
+        private function _createAdminAccount($admin): bool
+        {
+
+            /** @var GroupesTable $groupestable */
+            $groupestable = TableRegistry::getTableLocator()
+                                         ->get('UserManager.Groupes');
+            /** @var UsersTable $userstable */
+            $userstable = TableRegistry::getTableLocator()
+                                       ->get('UserManager.Users');
+            $groupe = $groupestable->findOrCreate(['label' => 'ADMIN'], function ($entity) {
+                $entity->description = __('Super-administrateurs de l\'application');
+            });
+            $user = $userstable->newEntity(['username'   => $admin['login'],
+                                            'password'   => $admin['password'],
+                                            'email'      => $admin['email'],
+                                            'lastname'   => $admin['lastname'],
+                                            'firstname'  => $admin['firstname'],
+                                            'last_login' => date('now')], ['validate' => FALSE]);
+            $user = $userstable->save($user);
+            if ($user && $groupe) {
+                $userstable->Groupes->link($user, [$groupe]);
+                $groupestable->Rights->link($groupe, [$user]);
+                return TRUE;
+            }
+            return FALSE;
         }
     }

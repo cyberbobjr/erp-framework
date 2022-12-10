@@ -4,9 +4,8 @@
 
     use Cake\Core\Configure;
     use Cake\Http\Response;
-    use Cake\ORM\ResultSet;
-    use Cake\ORM\TableRegistry;
-    use Migrations\Migrations;
+    use JsonException;
+    use Wizardinstaller\Exceptions\InstallException;
     use Wizardinstaller\libs\InstallService;
 
     /**
@@ -21,8 +20,9 @@
         // étape 2 : Configuration BDD (host, login, mot de passe) et test
         // étape 3 : Création d'un compte admin+mot de passe et création des tables users/groupes/droits
         // étape 3 : Validation et enregistrement
-        const ADMIN = 'admin';
-        const BDD = 'bdd';
+        public const ADMIN = 'admin';
+        public const BDD = 'bdd';
+        public const MAX_STEPS = 5;
 
         /**
          * Le fichier de configuration de la BDD doit être dans un fichier indépendant, ce qui permet de le générer lorsque
@@ -34,17 +34,15 @@
          * @throws \Exception
          */
 
-        public function step($step = 1)
+        public function step(InstallService $installService, $step = 1)
         {
             $this->viewBuilder()->setLayout('Wizardinstaller.default');
             if (file_exists(ROOT . DS . 'install.lock')) {
-                throw new \Exception(__('L\'installation a déjà été paramétrée, supprimez le fichier install.lock pour recommencer l\'installation.'));
+                throw new \RuntimeException(__('L\'installation a déjà été paramétrée, supprimez le fichier install.lock pour recommencer l\'installation.'));
             }
-            // vérification anti petits malins
-            if ($step > 5) {
+            if ($step > self::MAX_STEPS) {
                 $this->Flash->error(__('Etape inconnue'));
-                return $this->redirect(['action' => 'step',
-                                        1]);
+                return $this->redirect(['action' => 'step', 1]);
             }
 
             /**
@@ -58,11 +56,14 @@
              * Si c'est une requête de passage à l'étape suivante
              */
             if ($this->request->is('post')) {
-                return $this->_parseStep($step);
+                return $this->_parseStep($step, $installService);
             }
         }
 
-        private function _displayStep($step)
+        /**
+         * @throws JsonException
+         */
+        private function _displayStep($step, $installService)
         {
             switch ($step) {
                 case 1 :
@@ -79,19 +80,24 @@
                     // vérification que les données en session soient bien présentes
                     if (!$this->_ready()) {
                         $this->Flash->error(__('Elements manquants, redirection vers la page principale de configuration'));
-                        return $this->redirect(['action' => 'step',
-                                                1]);
+                        return $this->redirect(['action' => 'step', 1]);
                     }
+                    $bdd = $this->_readSession(self::BDD);
+                    $admin = $this->_readSession(self::ADMIN);
                     // récapitulatif des informations et sauvegarde définitive
+                    $this->set(compact('bdd', 'admin'));
                     break;
                 case 5:
-                    $this->_executeInstallation();
+                    $this->_executeInstallation($installService);
                     break;
             }
             $this->set('step', $step);
         }
 
-        private function _parseStep($step): ?Response
+        /**
+         * @throws JsonException
+         */
+        private function _parseStep($step, InstallService $installService): ?Response
         {
             switch ($step) {
                 case 1 :
@@ -100,16 +106,15 @@
                 case 2 :
                     // step2 : Renseignement url et BDD
                     // enregistrement de la configuration en session et passage au step suivant
-                    $this->_saveSession(self::BDD, $this->request->getData());
+                    $this->_saveInSession(self::BDD, $this->request->getData());
                     break;
                 case 3:
                     // step3 : Renseignements admin/pwd
-                    $this->_saveSession(self::ADMIN, $this->request->getData());
+                    $this->_saveInSession(self::ADMIN, $this->request->getData());
                     // vérification de la conformité du mot de passe
                     if (!$this->_isPasswordCorrect()) {
                         $this->Flash->error(__('Les mots de passe ne correspondent pas'));
-                        return $this->redirect(['action' => 'step',
-                                                $step]);
+                        return $this->redirect(['action' => 'step', $step]);
                     }
                     break;
                 case 4:
@@ -117,19 +122,16 @@
                     // vérification que les données en session soient bien présentes
                     if (!$this->_ready()) {
                         $this->Flash->error(__('Elements manquants, redirection vers la page principale de configuration'));
-                        return $this->redirect(['action' => 'step',
-                                                1]);
+                        return $this->redirect(['action' => 'step', 1]);
                     }
                     // enregistrement de la configuration
                     if (!$this->_saveConfig()) {
                         $this->Flash->error(__('Erreur lors de l\'enregistrement de la configuration'));
-                        return $this->redirect(['action' => 'step',
-                                                4]);
+                        return $this->redirect(['action' => 'step', 4]);
                     }
                     $this->Flash->success(__('Configuration enregistrée'));
                     // la configuration s'est bien enregistrée, nous allons pouvoir créer les tables de l'application
-                    return $this->redirect(['action' => 'step',
-                                            5]);
+                    return $this->redirect(['action' => 'step', 5]);
                     break;
             }
             // redirection vers l'étape suivante
@@ -141,156 +143,71 @@
         /**
          * Récupération les informations en session
          * @param string $index Nom de la clef à récupérer en session
+         * @throws JsonException
          */
         private function _readSession(string $index)
         {
+            $data = NULL;
             if (!is_null($this->request->getSession()
-                                       ->read($index))
-            ) {
-                $formDatas = json_decode($this->request->getSession()
-                                                       ->read($index), TRUE);
-                $this->request = $this->request->withParsedBody($formDatas);
+                                       ->read($index))) {
+                $data = json_decode($this->request->getSession()
+                                                  ->read($index), TRUE, 512, JSON_THROW_ON_ERROR);
+                $this->request = $this->request->withParsedBody($data);
             }
+            return $data;
         }
 
+        /**
+         * @throws JsonException
+         */
         private function _ready(): bool
         {
-            return ($this->request->getSession()
-                                  ->check(self::ADMIN) && $this->request->getSession()
-                                                                        ->check(self::BDD));
+            return ($this->_readSession(self::ADMIN) !== NULL) && ($this->_readSession(self::BDD) !== NULL);
         }
 
-        private function _executeInstallation()
+        /**
+         * @throws JsonException
+         */
+        private function _executeInstallation(InstallService $installService): void
         {
-            $valid = TRUE;
-            if ($this->_isTablesMustBeCreated()) {
-                $valid = $this->_createTables();
-            }
-            /**
-             * Création du compte administrateur
-             */
-            if ($this->_createAdminAccount()) {
-                $this->Flash->success(__('compte administrateur créé'));
-            } else {
-                $this->Flash->error(__('Erreur durant la création du compte administrateur'));
-                $valid = FALSE;
-            }
-            if ($valid) {
-                // création du fichier install.lock
-                touch(ROOT . DS . 'install.lock');
+            $valid = FALSE;
+            try {
+                $results = $installService->execute($this->_readSession(self::ADMIN), $this->_readSession(self::BDD));
+                foreach ($results as $result) {
+                    $this->Flash->success($result);
+                }
+                $valid = TRUE;
+            } catch (InstallException $ex) {
+                $this->Flash->error($ex->getMessage());
             }
             $this->set('valid', $valid);
-        }
-
-        private function _isTablesMustBeCreated(): bool
-        {
-            $bdd = json_decode($this->request->getSession()
-                                             ->read(self::BDD), TRUE);
-            return !$bdd['notcreate'];
-        }
-
-        private function _createTables(): bool
-        {
-            // création des tables et enregistrement de l'utilisateur
-            if (!$this->_generateTables()) {
-                $this->Flash->error(__('Erreur durant la création des tables'));
-                return FALSE;
-            }
-            $this->Flash->success(__('Tables créées'));
-
-            if (!$this->_createRights()) {
-                $this->Flash->error(__('Erreur durant la création des droits'));
-                return FALSE;
-            }
-
-            $this->Flash->success(__('Rights créés'));
-            return TRUE;
-        }
-
-        /**
-         * Génére les tables nécessaires pour l'application
-         * @return bool TRUE en cas de succès, FALSE si échec
-         */
-        private function _generateTables(): bool
-        {
-            $migrations = new Migrations();
-            try {
-                $success = $migrations->migrate(['plugin' => 'Wizardinstaller']);
-            } catch (\Exception $ex) {
-                debug($ex->getMessage());
-                debug($ex->getTraceAsString());
-                $success = FALSE;
-            }
-            return $success;
-        }
-
-        /**
-         * Création des droits dans la table droits
-         * @return array|bool|ResultSet
-         */
-        private function _createRights(): ResultSet|bool|array
-        {
-            $migrations = new Migrations();
-            try {
-                $success = $migrations->seed(['seed' => 'RightsSeed']);
-            } catch (\Exception $ex) {
-                $success = FALSE;
-            }
-            return $success;
-        }
-
-        /**
-         * Création du compte admin
-         * @return bool
-         */
-        private function _createAdminAccount(): bool
-        {
-            $admin = json_decode($this->request->getSession()
-                                               ->read(self::ADMIN), TRUE);
-            $groupestable = TableRegistry::getTableLocator()
-                                         ->get('UserManager.Groupes');
-            $userstable = TableRegistry::getTableLocator()
-                                       ->get('UserManager.Users');
-            $groupe = $groupestable->findOrCreate(['label' => 'ADMIN'], function ($entity) {
-                $entity->description = __('Super-administrateurs de l\'application');
-            });
-            $user = $userstable->newEntity(['username'   => $admin['login'],
-                                            'password'   => $admin['password'],
-                                            'email'      => $admin['email'],
-                                            'lastname'   => $admin['lastname'],
-                                            'firstname'  => $admin['firstname'],
-                                            'last_login' => date('now')], ['validate' => FALSE]);
-            $user = $userstable->save($user);
-            if ($user && $groupe) {
-                $userstable->Groupes->link($user, [$groupe]);
-                $groupestable->Rights->link($groupe, [$user]);
-                return TRUE;
-            }
-            return FALSE;
         }
 
         /**
          * Sauvegarde les informations en session
          * @param string $index Nom de la clef à utiliser pour la session
-         * @param array $data Tableau à sauvegarder
+         * @param array  $data Tableau à sauvegarder
+         * @throws JsonException
          */
-        private function _saveSession($index, $data)
+        private function _saveInSession(string $index, $data): void
         {
             $this->request->getSession()
-                          ->write($index, json_encode($data));
+                          ->write($index, json_encode($data, JSON_THROW_ON_ERROR));
         }
 
         /**
          * Vérifie que le mot de passe est identique à la confirmation du mot de passe
+         * @TODO refactoriser dans une lib à part
          * @return bool
          */
-        private function _isPasswordCorrect()
+        private function _isPasswordCorrect(): bool
         {
-            return ($this->request->getData('password') == $this->request->getData('confirmpassword'));
+            return ($this->request->getData('password') === $this->request->getData('confirmpassword'));
         }
 
         /**
          * Enregistre la configuration
+         * @throws JsonException
          */
         private function _saveConfig(): bool
         {
@@ -299,26 +216,24 @@
             $this->_generateClef();
             // lancement des opérations de création de la configuration
             // la configuration a bien été générée, on peut enregistrer le fichier de configuration
-            return Configure::dump('app_config', 'default', ['Security',
-                                                             'Datasources']);
+            return Configure::dump('app_config', 'default', ['Security', 'Datasources']);
         }
 
         /**
          * Génére le fichier de configuration Bdd
+         * @throws JsonException
          */
-        private function _configureDatasource()
+        private function _configureDatasource(): void
         {
             $bdd = json_decode($this->request->getSession()
-                                             ->read(self::BDD), TRUE);
+                                             ->read(self::BDD), TRUE, 512, JSON_THROW_ON_ERROR);
             $bdd['className'] = 'Cake\Database\Connection';
             $bdd['driver'] = 'Cake\Database\Driver\Mysql';
             $bdd['persistent'] = FALSE;
             $bdd['encoding'] = 'utf8';
             $bdd['timezone'] = 'UTC';
             $bdd['cacheMetadata'] = TRUE;
-            unset($bdd['clef']);
-            unset($bdd['step3']);
-            unset($bdd['notcreate']);
+            unset($bdd['clef'], $bdd['step3'], $bdd['notcreate']);
             $testbdd = $bdd;
             $testbdd['database'] = 'test_' . $bdd['database'];
             Configure::write('Datasources.test', $testbdd);
@@ -327,11 +242,12 @@
 
         /**
          * Génére le fichier de configuration pour la clef de sécurité
+         * @throws JsonException
          */
         private function _generateClef(): void
         {
             $bdd = json_decode($this->request->getSession()
-                                             ->read(self::BDD), TRUE);
+                                             ->read(self::BDD), TRUE, 512, JSON_THROW_ON_ERROR);
             Configure::write('Security.salt', $bdd['clef']);
         }
 
@@ -354,25 +270,5 @@
                 return 4;
             }
             return 1;
-        }
-
-        /**
-         * Fonction qui vérifie si les paramètres de la BDD sont corrects
-         * Les paramètres sont en $_POST
-         * Cette fonction est appelée en AJAX et renvoie un résultat JSON ok/nok
-         */
-        public function checkBdd(InstallService $installService)
-        {
-            // récupération des informations $_POST
-            $host = $this->request->getData('host');
-            $username = $this->request->getData('username');
-            $pwd = $this->request->getData('password');
-            $port = $this->request->getData('port', 3306);
-            $bdd = $this->request->getData('database');
-            $result = $installService->checkBdd($host, $port, $username, $pwd, $bdd);
-            $this->set(compact('result'));
-            $this->viewBuilder()
-                 ->setOption('serialize', ['result'])
-                 ->setOption('jsonOptions', JSON_FORCE_OBJECT);
         }
     }
