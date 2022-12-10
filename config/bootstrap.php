@@ -124,9 +124,9 @@
          *
          * See also https://book.cakephp.org/4/en/controllers/request-response.html#trusting-proxy-headers
          */
-        $trustProxy = false;
+        $trustProxy = FALSE;
 
-        $s = null;
+        $s = NULL;
         if (env('HTTPS') || ($trustProxy && env('HTTP_X_FORWARDED_PROTO') === 'https')) {
             $s = 's';
         }

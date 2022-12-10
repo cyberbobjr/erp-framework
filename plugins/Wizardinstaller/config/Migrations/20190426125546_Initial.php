@@ -385,7 +385,7 @@
 
         public function down()
         {
-            $this->dropTable('configs');
+            $this->table('configs')->drop()->save();
             $this->dropTable('rights');
             $this->dropTable('rights_groupes');
             $this->dropTable('events');

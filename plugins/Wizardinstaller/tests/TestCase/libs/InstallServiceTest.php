@@ -27,4 +27,17 @@
             $this->installService->execute(NULL, NULL);
         }
 
+        public function testGivenValidDataShouldCreateDB(): void
+        {
+            $bdd['notcreate'] = FALSE;
+            $admin = [
+                'login'     => 'login',
+                'password'  => 'password',
+                'email'     => 'email',
+                'lastname'  => 'lastname',
+                'firstname' => 'firstname',
+            ];
+            $results = $this->installService->execute($admin, $bdd);
+            $this->assertTrue(count($results) > 0);
+        }
     }

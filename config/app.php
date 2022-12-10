@@ -209,9 +209,18 @@
                  * The test connection is used during the test suite.
                  */
                 'test'    => [
-                    'className'  => 'Cake\Database\Connection',
-                    'driver'     => 'Cake\Database\Driver\Mysql',
-                    'persistent' => FALSE,
+                    'className'        => 'Cake\Database\Connection',
+                    'driver'           => 'Cake\Database\Driver\Mysql',
+                    'persistent'       => FALSE,
+                    'host'             => 'erp_mysql',
+                    //'port' => 'nonstandard_port_number',
+                    'username'         => 'root',
+                    'password'         => 'root',
+                    'database'         => 'test_erp',
+                    'encoding'         => 'utf8',
+                    'timezone'         => 'UTC',
+                    'cacheMetadata'    => TRUE,
+                    'quoteIdentifiers' => FALSE,
                 ]
             ],
 
