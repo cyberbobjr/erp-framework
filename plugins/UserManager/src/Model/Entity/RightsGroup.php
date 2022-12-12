@@ -9,10 +9,10 @@ use Cake\ORM\Entity;
  * @property int $droits_id
  * @property int $goupes_id
  *
- * @property \UserManager\Model\Entity\Right $droit
- * @property \UserManager\Model\Entity\Groupe $groupe
+ * @property Right $droit
+ * @property Group $groupe
  */
-class RightsGroupe extends Entity
+class RightsGroup extends Entity
 {
 
     /**
@@ -27,6 +27,6 @@ class RightsGroupe extends Entity
     protected $_accessible = [
         '*' => true,
         'rights_id' => false,
-        'groupes_id' => false
+        'groups_id' => false
     ];
 }

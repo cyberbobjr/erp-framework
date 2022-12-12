@@ -6,8 +6,8 @@
 <?php $this->start('panel-content'); ?>
 <fieldset>
     <legend><?= __("Paramétrage du compte administrateur") ?></legend>
-    <?= $this->Form->control('login', ['label' => __('Login de l\'administrateur'),
-                                       'required']); ?>
+    <?= $this->Form->control('username', ['label' => __('Login de l\'administrateur'),
+                                          'required']); ?>
     <?= $this->Form->control('password', ['label' => __('Mot de passe de l\'administrateur'),
                                           'required']); ?>
     <?= $this->Form->control('confirmpassword', ['label' => __('Confirmer le mot de passe de l\'administrateur'),

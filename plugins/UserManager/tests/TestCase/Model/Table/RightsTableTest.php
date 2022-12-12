@@ -5,7 +5,7 @@
     use Cake\ORM\TableRegistry;
     use Cake\TestSuite\TestCase;
     use UserManager\Model\Entity\Right;
-    use UserManager\Model\Table\GroupesTable;
+    use UserManager\Model\Table\GroupsTable;
     use UserManager\Model\Table\RightsTable;
     use UserManager\Model\Table\UsersTable;
 
@@ -13,7 +13,7 @@
      * Class DroitsTableTest
      * @package UserManager\src\Model\Table
      * @property RightsTable $Rights
-     * @property GroupesTable $Groupes
+     * @property GroupsTable $Groupes
      * @property UsersTable $Users
      */
     class RightsTableTest extends TestCase
@@ -21,7 +21,7 @@
         /**
          * Test subject
          *
-         * @var \UserManager\Model\Table\GroupesTable
+         * @var \UserManager\Model\Table\GroupsTable
          */
         public $Groupes;
         public $Users;

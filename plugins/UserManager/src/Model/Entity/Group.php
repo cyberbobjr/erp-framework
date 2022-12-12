@@ -11,11 +11,10 @@
      * @property string $label
      * @property string|null $description
      *
-     * @property Right[] $droits
      * @property User[] $users
      * @property Right[] $rights
      */
-    class Groupe extends Entity
+    class Group extends Entity
     {
 
         /**

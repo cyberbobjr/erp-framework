@@ -5,9 +5,9 @@
     use Cake\TestSuite\Fixture\TestFixture;
 
     /**
-     * GroupesUsersFixture
+     * GroupsUsersFixture
      */
-    class GroupesUsersFixture extends TestFixture
+    class GroupsUsersFixture extends TestFixture
     {
         /**
          * Fields
@@ -32,7 +32,7 @@
                                'comment'       => '',
                                'precision'     => NULL,
                                'autoIncrement' => NULL],
-            'groupes_id'   => ['type'          => 'integer',
+            'groups_id'    => ['type'          => 'integer',
                                'length'        => 11,
                                'unsigned'      => FALSE,
                                'null'          => FALSE,
@@ -41,12 +41,12 @@
                                'precision'     => NULL,
                                'autoIncrement' => NULL],
             '_indexes'     => [
-                'groupes_id' => ['type'    => 'index',
-                                 'columns' => ['groupes_id'],
-                                 'length'  => []],
-                'users_id'   => ['type'    => 'index',
-                                 'columns' => ['users_id'],
-                                 'length'  => []],
+                'groups_id' => ['type'    => 'index',
+                                'columns' => ['groups_id'],
+                                'length'  => []],
+                'users_id'  => ['type'    => 'index',
+                                'columns' => ['users_id'],
+                                'length'  => []],
             ],
             '_constraints' => [
                 'primary' => ['type'    => 'primary',

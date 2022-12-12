@@ -2,15 +2,20 @@
 
     namespace UserManager\Controller;
 
-    use UserManager\Model\Table\GroupesTable;
+    use Cake\Datasource\Exception\RecordNotFoundException;
+    use Cake\Datasource\ResultSetInterface;
+    use Cake\Network\Exception\NotFoundException;
+    use Cake\Network\Response;
+    use UserManager\Model\Entity\Group;
+    use UserManager\Model\Table\GroupsTable;
     use UserManager\Model\Table\RightsTable;
 
     /**
      * Groupes Controller
      *
-     * @property GroupesTable $Groupes
+     * @property GroupsTable $Groupes
      * @property RightsTable $Rights
-     * @method \UserManager\Model\Entity\Groupe[]|\Cake\Datasource\ResultSetInterface paginate($object = NULL, array $settings = [])
+     * @method Group[]|ResultSetInterface paginate($object = NULL, array $settings = [])
      */
     class GroupesController extends AppController
     {
@@ -20,17 +25,17 @@
          */
         public function index()
         {
-            $groupes = $this->paginate($this->Groupes);
+            $groups = $this->paginate($this->Groupes);
 
-            $this->set(compact('groupes'));
-            $this->set('_serialize', ['groupes']);
+            $this->set(compact('groups'));
+            $this->set('_serialize', ['groups']);
         }
 
         /**
          * View method
          *
          * @param string|null $id Groupe id.
-         * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
+         * @throws RecordNotFoundException When record not found.
          */
         public function view($id = NULL)
         {
@@ -73,8 +78,8 @@
          * Edit method
          *
          * @param string|null $id Groupe id.
-         * @return \Cake\Network\Response|void Redirects on successful edit, renders view otherwise.
-         * @throws \Cake\Network\Exception\NotFoundException When record not found.
+         * @return Response|void Redirects on successful edit, renders view otherwise.
+         * @throws NotFoundException When record not found.
          */
         public function edit($id = NULL)
         {
@@ -102,8 +107,8 @@
          * Delete method
          *
          * @param string|null $id Groupe id.
-         * @return \Cake\Network\Response|null Redirects to index.
-         * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
+         * @return Response|null Redirects to index.
+         * @throws RecordNotFoundException When record not found.
          */
         public function delete($id = NULL)
         {

@@ -5,12 +5,19 @@
     use Cake\ORM\ResultSet;
     use Cake\ORM\TableRegistry;
     use Migrations\Migrations;
-    use UserManager\Model\Table\GroupesTable;
+    use UserManager\Model\Table\GroupsTable;
     use UserManager\Model\Table\UsersTable;
     use Wizardinstaller\Exceptions\InstallException;
 
     class InstallService
     {
+        private string $connection;
+
+        public function __construct($connection = 'default')
+        {
+            $this->connection = $connection;
+        }
+
         /**
          * @param $admin
          * @param $bdd
@@ -64,7 +71,7 @@
          */
         private function _generateTables(): bool
         {
-            return (new Migrations())->migrate(['plugin' => 'Wizardinstaller']);
+            return (new Migrations(['connection' => $this->connection]))->migrate(['plugin' => 'Wizardinstaller']);
         }
 
         /**
@@ -73,7 +80,7 @@
          */
         private function _createRights(): ResultSet|bool|array
         {
-            return (new Migrations())->seed(['seed' => 'RightsSeed']);
+            return (new Migrations(['connection' => $this->connection]))->seed(['plugin' => 'Wizardinstaller', 'seed' => 'RightsSeed']);
         }
 
         /**
@@ -84,25 +91,25 @@
         private function _createAdminAccount($admin): bool
         {
 
-            /** @var GroupesTable $groupestable */
-            $groupestable = TableRegistry::getTableLocator()
-                                         ->get('UserManager.Groupes');
+            /** @var GroupsTable $groupstable */
+            $groupstable = TableRegistry::getTableLocator()
+                                        ->get('UserManager.Groups');
             /** @var UsersTable $userstable */
             $userstable = TableRegistry::getTableLocator()
                                        ->get('UserManager.Users');
-            $groupe = $groupestable->findOrCreate(['label' => 'ADMIN'], function ($entity) {
+            $group = $groupstable->findOrCreate(['label' => 'ADMIN'], function ($entity) {
                 $entity->description = __('Super-administrateurs de l\'application');
             });
-            $user = $userstable->newEntity(['username'   => $admin['login'],
+            $user = $userstable->newEntity(['username'   => $admin['username'],
                                             'password'   => $admin['password'],
                                             'email'      => $admin['email'],
                                             'lastname'   => $admin['lastname'],
                                             'firstname'  => $admin['firstname'],
                                             'last_login' => date('now')], ['validate' => FALSE]);
             $user = $userstable->save($user);
-            if ($user && $groupe) {
-                $userstable->Groupes->link($user, [$groupe]);
-                $groupestable->Rights->link($groupe, [$user]);
+            if ($user && $group) {
+                $userstable->Groups->link($user, [$group]);
+                $groupstable->Rights->link($group, [$user]);
                 return TRUE;
             }
             return FALSE;

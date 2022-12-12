@@ -17,7 +17,7 @@
          *
          * @return void
          */
-        public function run()
+        public function run(): void
         {
             $data = [['id'    => '1',
                       'code'  => 'ADMIN',

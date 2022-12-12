@@ -1,7 +1,7 @@
 <?php
     /**
      * @var \App\View\AppView $this
-     * @var \UserManager\Model\Entity\Groupe $groupe
+     * @var \UserManager\Model\Entity\Group $groupe
      */
     $this->extend('/Common/panel');
     $this->assign('title', $groupe->has('id') ? __('Edition d\'un groupe') : __('Ajout d\'un groupe'));

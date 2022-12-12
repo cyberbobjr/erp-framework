@@ -1,7 +1,7 @@
 <?php
 /**
  * @var \App\View\AppView $this
- * @var \UserManager\Model\Entity\Groupe[]|\Cake\Collection\CollectionInterface $groupes
+ * @var \UserManager\Model\Entity\Group[]|\Cake\Collection\CollectionInterface $groupes
  */
 ?>
 <?php $this->extend('/Common/panel'); ?>

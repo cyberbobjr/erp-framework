@@ -135,9 +135,8 @@
                     break;
             }
             // redirection vers l'étape suivante
-            $step = $this->_getStep();
-            return $this->redirect(['action' => 'step',
-                                    $step]);
+            $step = $this->getStep();
+            return $this->redirect(['action' => 'step', $step]);
         }
 
         /**
@@ -186,7 +185,7 @@
         /**
          * Sauvegarde les informations en session
          * @param string $index Nom de la clef à utiliser pour la session
-         * @param array  $data Tableau à sauvegarder
+         * @param array $data Tableau à sauvegarder
          * @throws JsonException
          */
         private function _saveInSession(string $index, $data): void
@@ -214,8 +213,11 @@
             // paramétrage de la datasource
             $this->_configureDatasource();
             $this->_generateClef();
-            // lancement des opérations de création de la configuration
-            // la configuration a bien été générée, on peut enregistrer le fichier de configuration
+            return $this->_dumpConfig();
+        }
+
+        private function _dumpConfig(): bool
+        {
             return Configure::dump('app_config', 'default', ['Security', 'Datasources']);
         }
 
@@ -255,7 +257,7 @@
          * Retourne l'étape demandée
          * @return int Numéro de l'étape
          */
-        private function _getStep(): int
+        private function getStep(): int
         {
             if (!is_null($this->request->getData('step1'))) {
                 return 1;

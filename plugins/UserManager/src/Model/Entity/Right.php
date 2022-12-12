@@ -10,7 +10,7 @@ use Cake\ORM\Entity;
  * @property string $code
  * @property string $label
  *
- * @property \UserManager\Model\Entity\Groupe[] $groupes
+ * @property \UserManager\Model\Entity\Group[] $groupes
  */
 class Right extends Entity
 {

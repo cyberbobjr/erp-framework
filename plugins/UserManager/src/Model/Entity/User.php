@@ -3,6 +3,7 @@
     namespace UserManager\Model\Entity;
 
     use Cake\Auth\DefaultPasswordHasher;
+    use Cake\I18n\FrozenTime;
     use Cake\ORM\Entity;
 
     /**
@@ -19,9 +20,9 @@
      * @property string $adresse_complete
      * @property bool $is_first_login
      * @property string|null $avatar
-     * @property \Cake\I18n\FrozenTime|null $last_login
-     * @property \Cake\I18n\FrozenTime $created
-     * @property \Cake\I18n\FrozenTime $modified
+     * @property FrozenTime|null $last_login
+     * @property FrozenTime $created
+     * @property FrozenTime $modified
      * @property string|null $firstname
      * @property string|null $lastname
      * @property string|null $civ
@@ -42,7 +43,7 @@
      * @property string|null $stripe
      * @property string|null $ip
      * @property bool|null $archive
-     * @property Groupe[] $groupes
+     * @property Group[] $groups
      */
     class User extends Entity
     {
@@ -78,6 +79,6 @@
          */
         protected function _getAdresseComplete()
         {
-            return $this->_properties['address'].' / '.$this->_properties['zipcode'].' '.$this->_properties['city'];
+            return $this->_properties['address'] . ' / ' . $this->_properties['zipcode'] . ' ' . $this->_properties['city'];
         }
     }

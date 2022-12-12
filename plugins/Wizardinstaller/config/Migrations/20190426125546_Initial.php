@@ -32,20 +32,20 @@
                  ])
                  ->create();
 
-            $this->table('rights_groupes')
+            $this->table('rights_groups')
                  ->addColumn('rights_id', 'integer', [
                      'default' => NULL,
                      'limit'   => 11,
                      'null'    => FALSE,
                  ])
-                 ->addColumn('groupes_id', 'integer', [
+                 ->addColumn('groups_id', 'integer', [
                      'default' => NULL,
                      'limit'   => 11,
                      'null'    => FALSE,
                  ])
                  ->addIndex(
                      [
-                         'groupes_id',
+                         'groups_id',
                      ]
                  )
                  ->addIndex(
@@ -93,7 +93,7 @@
                  )
                  ->create();
 
-            $this->table('groupes')
+            $this->table('groups')
                  ->addColumn('label', 'string', [
                      'default' => NULL,
                      'limit'   => 45,
@@ -106,20 +106,20 @@
                  ])
                  ->create();
 
-            $this->table('groupes_users')
+            $this->table('groups_users')
                  ->addColumn('users_id', 'integer', [
                      'default' => NULL,
                      'limit'   => 11,
                      'null'    => FALSE,
                  ])
-                 ->addColumn('groupes_id', 'integer', [
+                 ->addColumn('groups_id', 'integer', [
                      'default' => NULL,
                      'limit'   => 11,
                      'null'    => FALSE,
                  ])
                  ->addIndex(
                      [
-                         'groupes_id',
+                         'groups_id',
                      ]
                  )
                  ->addIndex(
@@ -188,14 +188,6 @@
                  )
                  ->create();
 
-            $this->table('customer_extends')
-                 ->addColumn('tier_id', 'integer', [
-                     'default' => NULL,
-                     'limit'   => 11,
-                     'null'    => FALSE,
-                 ])
-                 ->create();
-
             $this->table('vats')
                  ->addColumn('rate', 'decimal', [
                      'default'   => NULL,
@@ -221,14 +213,6 @@
                      'default' => NULL,
                      'limit'   => NULL,
                      'null'    => TRUE,
-                 ])
-                 ->create();
-
-            $this->table('type_periodicities')
-                 ->addColumn('label', 'string', [
-                     'default' => NULL,
-                     'limit'   => 255,
-                     'null'    => FALSE,
                  ])
                  ->create();
 
@@ -387,10 +371,10 @@
         {
             $this->table('configs')->drop()->save();
             $this->dropTable('rights');
-            $this->dropTable('rights_groupes');
+            $this->dropTable('rights_groups');
             $this->dropTable('events');
-            $this->dropTable('groupes');
-            $this->dropTable('groupes_users');
+            $this->dropTable('groups');
+            $this->dropTable('groups_users');
             $this->dropTable('languages');
             $this->dropTable('countries');
             $this->dropTable('roles');

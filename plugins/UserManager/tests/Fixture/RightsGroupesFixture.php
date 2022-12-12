@@ -32,7 +32,7 @@
                                'comment'       => '',
                                'precision'     => NULL,
                                'autoIncrement' => NULL],
-            'groupes_id'   => ['type'          => 'integer',
+            'groups_id'    => ['type'          => 'integer',
                                'length'        => 11,
                                'unsigned'      => FALSE,
                                'null'          => FALSE,
@@ -41,12 +41,12 @@
                                'precision'     => NULL,
                                'autoIncrement' => NULL],
             '_indexes'     => [
-                'groupes_id' => ['type'    => 'index',
-                                 'columns' => ['groupes_id'],
-                                 'length'  => []],
-                'rights_id'  => ['type'    => 'index',
-                                 'columns' => ['rights_id'],
-                                 'length'  => []],
+                'groups_id' => ['type'    => 'index',
+                                'columns' => ['groups_id'],
+                                'length'  => []],
+                'rights_id' => ['type'    => 'index',
+                                'columns' => ['rights_id'],
+                                'length'  => []],
             ],
             '_constraints' => [
                 'primary' => ['type'    => 'primary',
@@ -69,9 +69,9 @@
         {
             $this->records = [
                 [
-                    'id'         => 1,
-                    'rights_id'  => 1,
-                    'groupes_id' => 1
+                    'id'        => 1,
+                    'rights_id' => 1,
+                    'groups_id' => 1
                 ],
             ];
             parent::init();

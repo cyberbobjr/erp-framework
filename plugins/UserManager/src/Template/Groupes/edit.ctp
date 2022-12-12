@@ -1,7 +1,7 @@
 <?php
     /**
      * @var \App\View\AppView $this
-     * @var \UserManager\Model\Entity\Groupe $groupe
+     * @var \UserManager\Model\Entity\Group $groupe
      */
 ?>
 <?= $this->Form->create($groupe); ?>

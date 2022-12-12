@@ -11,15 +11,16 @@
     use Cake\Http\Exception\UnauthorizedException;
     use Cake\Mailer\Email;
     use Cake\Network\Http\Client;
+    use Cake\Network\Response;
     use Cake\Utility\Security;
+    use Exception;
+    use UserManager\Model\Table\UsersTable;
     use UserManager\Utility\Droits;
-
-//use Google_Service_Calendar_Event;
 
     /**
      * Users Controller
      *
-     * @property \UserManager\Model\Table\UsersTable $Users
+     * @property UsersTable $Users
      */
     class UsersController extends AppController
     {
@@ -43,8 +44,8 @@
         /**
          * Avant traitement nous vérifions si les droits de l'abonnement permettent de faire l'action spécifiée
          * Pour l'instant seul l'ajout d'utilisateurs est vérifié
-         * @param  Event  $event
-         * @return \Cake\Network\Response|null
+         * @param Event $event
+         * @return Response|null
          */
         public function beforeFilter(Event $event)
         {
@@ -54,7 +55,7 @@
         /**
          * Fonction qui détermine les actions autorisées pour l'utilisateur connecté
          *
-         * @param  array  $user  Paramètre représentant l'entité utilisateur
+         * @param array $user Paramètre représentant l'entité utilisateur
          * @return boolean TRUE si l'action est autorisée, FALSE si non
          */
         public function isAuthorized($user): bool
@@ -77,8 +78,8 @@
 
         /**
          * Indique si l'utilisateur peut ajouter ou éditer l'utilisateur en paramètre
-         * @param  array  $currentuser  Tableau contenant les informations de l'utilisateur connecté
-         * @param  null  $user_id  Utilisateur à modifier ou NULL si nouvel utilisateur
+         * @param array $currentuser Tableau contenant les informations de l'utilisateur connecté
+         * @param null $user_id Utilisateur à modifier ou NULL si nouvel utilisateur
          * @return bool TRUE si autorisé, FALSE sinon
          */
         private function _canAdmin($currentuser, $user_id = NULL)
@@ -107,14 +108,14 @@
                 throw new ForbiddenException(__('Accès non autorisé'));
             }*/
             $users = $this->Users->find('all')
-                                 ->contain(['Groupes']);
+                                 ->contain(['Groups']);
             $title = __('Liste des utilisateurs');
             $this->set(compact('users', 'title'));
         }
 
         /**
          * Affiche le détail d'un utilisateur
-         * @param  int  $id  Identifiant référencant l'utilisateur désiré
+         * @param int $id Identifiant référencant l'utilisateur désiré
          * @throws NotFoundException
          */
         public function view($id = NULL)
@@ -135,7 +136,7 @@
 
         /**
          * Edite un utilisateur en spécifiant son identifiant
-         * @param  int  $id  Référence de l'utilisateur à modifier
+         * @param int $id Référence de l'utilisateur à modifier
          * @throws NotFoundException
          */
         public function edit($id = NULL)
@@ -159,7 +160,7 @@
                 throw new NotFoundException(__('Référence introuvable'));
             }
             // récupération de l'utilisateur
-            $userToEdit = $this->Users->get($id, ['contain' => ['Groupes']]);
+            $userToEdit = $this->Users->get($id, ['contain' => ['Groups']]);
             // pour ne rien afficher dans le champ password, on efface la propriété password
             unset($userToEdit['password']);
             // Si la requête est de type post, put ou patch, alors nous traitons les données reçues du formulaire
@@ -182,22 +183,22 @@
                 unset($userToEdit['password']);
                 unset($userToEdit['password_confirm']);
             }
-            $groupes = $this->Users->Groupes->find('list');
+            $groups = $this->Users->Groupes->find('list');
 
-            $this->set(compact('userToEdit', 'groupes'));
+            $this->set(compact('userToEdit', 'groups'));
         }
 
         /**
          * Ajoute ou modifie un utilisateur
          * Cette fonction est utilisée par l'administrateur de l'organisation pour déclarer ou modifier les utilisateurs autorisés
          * Seuls les administrateurs d'organisation ou superadmin peuvent appeler cette fonction
-         * @param  int  $user_id  Référence de l'utilisateur si modification
-         * @return \Cake\Network\Response|null
+         * @param int $user_id Référence de l'utilisateur si modification
+         * @return Response|null
          */
         public function add($user_id = NULL)
         {
             if (!is_null($user_id)) {
-                $userToEdit = $this->Users->get($user_id, ['contain' => 'Groupes']);
+                $userToEdit = $this->Users->get($user_id, ['contain' => 'Groups']);
             } else {
                 $userToEdit = $this->Users->newEntity();
             }
@@ -205,7 +206,7 @@
             if ($this->request->is(['post',
                                     'put'])
             ) {
-                $userToEdit = $this->Users->patchEntity($userToEdit, $this->request->getData(), ['associated' => ['Groupes']]);
+                $userToEdit = $this->Users->patchEntity($userToEdit, $this->request->getData(), ['associated' => ['Groups']]);
                 if ($this->Users->save($userToEdit)) {
 
                     $this->Flash->success(__('Utilisateur créé avec succès !'));
@@ -217,19 +218,19 @@
                     $this->Flash->error(__('Erreur dans la sauvegarde'));
                 }
             }
-            $groupes = $this->Users->Groupes->find('list');
+            $groups = $this->Users->Groups->find('list');
             // récupération de la liste des avatars présents dans un répertoire
             $avatars = [];
-            foreach (glob(WWW_ROOT.'img/avatars/*.png') as $filename) {
+            foreach (glob(WWW_ROOT . 'img/avatars/*.png') as $filename) {
                 $avatars[] = basename($filename);
             }
 
-            $this->set(compact('userToEdit', 'avatars', 'groupes'));
+            $this->set(compact('userToEdit', 'avatars', 'groups'));
         }
 
         /**
          * Supprime un utilisateur en spécifiant son identifiant
-         * @return \Cake\Network\Response|null
+         * @return Response|null
          * @throws NotFoundException
          */
         public function delete($users_id)
@@ -252,7 +253,7 @@
 
         /**
          * Affiche la page de login et connecte un utilisateur le cas échéant
-         * @return \Cake\Network\Response|null
+         * @return Response|null
          */
         public function login()
         {
@@ -309,15 +310,15 @@
         /**
          * Connexion de l'utilisateur, nous spécifions la date de connexion et nous plaçons les informations des droits
          * en session
-         * @param  array  $userToConnect  contenant les informations de l'utilisateur
+         * @param array $userToConnect contenant les informations de l'utilisateur
          */
         public function connectUser($userToConnect)
         {
             $this->Auth->setUser($userToConnect);
             Droits::setUser($userToConnect);
             // nous récupérons l'utilisateur avec ses groupes
-            $fullUser = $this->Users->get($userToConnect['id'], ['contain' => ['Groupes',
-                                                                               'Groupes.Rights']]);
+            $fullUser = $this->Users->get($userToConnect['id'], ['contain' => ['Groups',
+                                                                               'Groups.Rights']]);
             // et nous enregistrons l'information en Session
             $fullUser->last_login = $this->_getLastLogin($userToConnect);
             $fullUser->ip = $this->_getLastIp($userToConnect);
@@ -371,7 +372,7 @@
                 $last_ip = $user['ip'];
             }
             // on sauvegarde l'IP
-            $this->Users->setIp($user['id'], $this->request->clientIp());
+            $this->Users->setIp($this->request->clientIp(), $user['id']);
             return $last_ip;
         }
 
@@ -520,7 +521,7 @@
 
         /**
          * Envoie un mail de récupération de mot de passe à un utilisateur
-         * @param  null  $user
+         * @param null $user
          * @return bool
          */
         private function send_lost_password_mail($user = NULL)
@@ -538,8 +539,8 @@
         /**
          * Lien de confirmation reçu par mail
          * L'écran va afficher la possibilité de créer un mot de passe pour l'utilisateur
-         * @param  string  $uuid  Clef de réinitialisation
-         * @return \Cake\Network\Response|null
+         * @param string $uuid Clef de réinitialisation
+         * @return Response|null
          * @throws BadRequestException
          */
         public function resetPassword($uuid = NULL)
@@ -618,14 +619,14 @@
             $captcha = $this->request->getData('g-recaptcha-response');
             $debug = Configure::read('debug');
             if ((!$debug) && (empty($captcha) || !$this->_checkCaptcha($captcha))) {
-                throw new \Exception(__('Erreur, le captcha est invalide'));
+                throw new Exception(__('Erreur, le captcha est invalide'));
             }
         }
 
         private function _isEmailConfirm()
         {
             if ($this->request->getData('owner.courriel') !== $this->request->getData('owner.courriel_confirm')) {
-                throw new \Exception(__('Erreur, les courriels ne correspondent pas'));
+                throw new Exception(__('Erreur, les courriels ne correspondent pas'));
             }
         }
 
@@ -664,8 +665,8 @@
 
         /**
          * Valide un utilisateur (clic sur mail de confirmation mail)
-         * @param  null  $uuid
-         * @return \Cake\Network\Response|null
+         * @param null $uuid
+         * @return Response|null
          */
         public function validateUser($uuid = NULL)
         {

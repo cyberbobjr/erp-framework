@@ -5,9 +5,9 @@
     use Cake\TestSuite\Fixture\TestFixture;
 
     /**
-     * GroupesFixture
+     * GroupsFixture
      */
-    class GroupesFixture extends TestFixture
+    class GroupsFixture extends TestFixture
     {
 
         /**

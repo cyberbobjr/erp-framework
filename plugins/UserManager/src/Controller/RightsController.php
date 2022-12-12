@@ -2,10 +2,14 @@
 
     namespace UserManager\Controller;
 
+    use Cake\Datasource\Exception\RecordNotFoundException;
+    use Cake\Network\Response;
+    use UserManager\Model\Table\RightsTable;
+
     /**
      * Rights Controller
      *
-     * @property \UserManager\Model\Table\RightsTable $Rights
+     * @property RightsTable $Rights
      */
     class RightsController extends AppController
     {
@@ -13,7 +17,7 @@
         /**
          * Index method
          *
-         * @return \Cake\Network\Response|null
+         * @return Response|null
          */
         public function index()
         {
@@ -28,12 +32,12 @@
          * View method
          *
          * @param string|null $id Droit id.
-         * @return \Cake\Network\Response|null
-         * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
+         * @return Response|null
+         * @throws RecordNotFoundException When record not found.
          */
         public function view($id = NULL)
         {
-            $droit = $this->Rights->get($id, ['contain' => ['Groupes']]);
+            $droit = $this->Rights->get($id, ['contain' => ['Groups']]);
 
             $this->set('right', $droit);
             $this->set('_serialize', ['right']);
@@ -42,7 +46,7 @@
         /**
          * Add method
          * @param string|null $id Droit id.
-         * @return \Cake\Network\Response|void Redirects on successful add, renders view otherwise.
+         * @return Response|void Redirects on successful add, renders view otherwise.
          */
         public function add($id = NULL)
         {
@@ -54,8 +58,8 @@
          * Delete method
          *
          * @param string|null $id Droit id.
-         * @return \Cake\Network\Response|null Redirects to index.
-         * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
+         * @return Response|null Redirects to index.
+         * @throws RecordNotFoundException When record not found.
          */
         public function delete($id = NULL)
         {

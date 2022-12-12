@@ -5,7 +5,7 @@
     use Cake\ORM\TableRegistry;
     use Cake\TestSuite\IntegrationTestTrait;
     use Cake\TestSuite\TestCase;
-    use UserManager\Model\Entity\Groupe;
+    use UserManager\Model\Entity\Group;
 
     class GroupesControllerTest extends TestCase
     {
@@ -58,7 +58,7 @@
         {
             $this->get('/user-manager/groupes/view/1');
             $this->assertResponseOk();
-            $this->assertInstanceOf(Groupe::class, $this->viewVariable('groupe'));
+            $this->assertInstanceOf(Group::class, $this->viewVariable('groupe'));
             $this->assertContains('ADMIN', $this->_getBodyAsString());
         }
 

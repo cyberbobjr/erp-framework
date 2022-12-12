@@ -5,21 +5,21 @@
     use Cake\ORM\TableRegistry;
     use Cake\TestSuite\TestCase;
     use UserManager\Model\Entity\User;
-    use UserManager\Model\Table\GroupesTable;
+    use UserManager\Model\Table\GroupsTable;
     use UserManager\Model\Table\UsersTable;
 
     /**
      * Class GroupesTableTest
      * @package UserManager\Test\TestCase\Model\Table
      * @property UsersTable $Users
-     * @property GroupesTable $Groupes
+     * @property GroupsTable $Groupes
      */
     class GroupesTableTest extends TestCase
     {
         /**
          * Test subject
          *
-         * @var GroupesTable
+         * @var GroupsTable
          */
         public $Groupes;
         public $Users;
