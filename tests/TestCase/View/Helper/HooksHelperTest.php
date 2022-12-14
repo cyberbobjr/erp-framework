@@ -33,7 +33,7 @@
             $this->loadPlugins([$this->pluginName]);
             $view = new View();
             $view->setPlugin($this->pluginName);
-            $view->name = $this->controllerName;
+//            $view->name = $this->controllerName;
             $view->setTemplatePath($this->controllerName);
             $view->setTemplate($this->actionName);
             $view->enableAutoLayout(FALSE);

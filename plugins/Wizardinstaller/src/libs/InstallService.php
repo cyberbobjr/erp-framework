@@ -39,9 +39,14 @@
                 throw new InstallException(__('Erreur durant la création du compte administrateur'));
             }
             $results[] = __('compte administrateur créé');
+            $this->_createLockFile();
+            return $results;
+        }
+
+        private function _createLockFile(): void
+        {
             // création du fichier install.lock
             touch(ROOT . DS . 'install.lock');
-            return $results;
         }
 
         /**
@@ -80,7 +85,8 @@
          */
         private function _createRights(): ResultSet|bool|array
         {
-            return (new Migrations(['connection' => $this->connection]))->seed(['plugin' => 'Wizardinstaller', 'seed' => 'RightsSeed']);
+            return (new Migrations(['connection' => $this->connection]))->seed(['plugin' => 'Wizardinstaller',
+                                                                                'seed'   => 'RightsSeed']);
         }
 
         /**

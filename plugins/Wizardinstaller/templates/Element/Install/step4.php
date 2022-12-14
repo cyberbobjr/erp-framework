@@ -43,7 +43,7 @@ Récapitulatif des informations de configuration
     <tbody>
     <tr>
         <td>Login de connexion administrateur</td>
-        <td><?= $admin->login ?></td>
+        <td><?= $admin->username ?></td>
     </tr>
     <tr>
         <td>Nom / prénom de l'administrateur</td>

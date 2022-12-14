@@ -6,6 +6,7 @@
     use Cake\Http\Response;
     use JsonException;
     use Wizardinstaller\Exceptions\InstallException;
+    use Wizardinstaller\libs\CheckInstallService;
     use Wizardinstaller\libs\InstallService;
 
     /**
@@ -50,13 +51,13 @@
              */
             if ($this->request->is('get')) {
                 // en fonction de l'étape
-                return $this->_displayStep($step);
+                return $this->_displayStep($step, $installService);
             }
             /**
              * Si c'est une requête de passage à l'étape suivante
              */
             if ($this->request->is('post')) {
-                return $this->_parseStep($step, $installService);
+                return $this->_parseStep($step);
             }
         }
 
@@ -82,8 +83,8 @@
                         $this->Flash->error(__('Elements manquants, redirection vers la page principale de configuration'));
                         return $this->redirect(['action' => 'step', 1]);
                     }
-                    $bdd = $this->_readSession(self::BDD);
-                    $admin = $this->_readSession(self::ADMIN);
+                    $bdd = (object)$this->_readSession(self::BDD);
+                    $admin = (object)$this->_readSession(self::ADMIN);
                     // récapitulatif des informations et sauvegarde définitive
                     $this->set(compact('bdd', 'admin'));
                     break;
@@ -97,7 +98,7 @@
         /**
          * @throws JsonException
          */
-        private function _parseStep($step, InstallService $installService): ?Response
+        private function _parseStep($step): ?Response
         {
             switch ($step) {
                 case 1 :
@@ -185,7 +186,7 @@
         /**
          * Sauvegarde les informations en session
          * @param string $index Nom de la clef à utiliser pour la session
-         * @param array $data Tableau à sauvegarder
+         * @param array  $data Tableau à sauvegarder
          * @throws JsonException
          */
         private function _saveInSession(string $index, $data): void
@@ -219,6 +220,20 @@
         private function _dumpConfig(): bool
         {
             return Configure::dump('app_config', 'default', ['Security', 'Datasources']);
+        }
+
+        public function checkBdd(CheckInstallService $checkInstallService)
+        {
+            $host = $this->request->getData('host');
+            $port = $this->request->getData('port', 3306);
+            $username = $this->request->getData('username');
+            $pwd = $this->request->getData('password');
+            $bdd = $this->request->getData('database');
+            $result = $checkInstallService->checkBdd($host, $port, $username, $pwd, $bdd);
+            $this->set('result', $result);
+            $this->viewBuilder()
+                 ->setOption('serialize', ['result'])
+                 ->setOption('jsonOptions', JSON_FORCE_OBJECT);
         }
 
         /**
